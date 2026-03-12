@@ -39,7 +39,7 @@ export const WordTrainer = ({
 
   useEffect(() => {
     setAnswer("");
-  }, [word.dz, mode]);
+  }, [word.dz, mode, isAnswered]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,6 +62,7 @@ export const WordTrainer = ({
         <form className="trainer-form" onSubmit={handleSubmit}>
           <input
             autoComplete="off"
+            autoFocus
             className="trainer-input"
             disabled={isAnswered}
             onChange={(event) => setAnswer(event.target.value)}
@@ -70,7 +71,7 @@ export const WordTrainer = ({
           />
           {isAnswered ? (
             <button className="primary-button" onClick={onContinue} type="button">
-              Continue
+              Next
             </button>
           ) : (
             <button className="primary-button" type="submit">

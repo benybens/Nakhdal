@@ -1,0 +1,19 @@
+{
+  "id": "lesson_03_pronouns",
+  "title": "Lecon 03 - Pronoms simples",
+  "words": [
+    { "dz": "Ana", "fr": "Je" },
+    { "dz": "Nta", "fr": "Tu" },
+    { "dz": "Ntia", "fr": "Tu" },
+    { "dz": "Houwa", "fr": "Il" },
+    { "dz": "Hiya", "fr": "Elle" },
+    { "dz": "7na", "fr": "Nous" },
+    { "dz": "Ntouma", "fr": "Vous" },
+    { "dz": "Houma", "fr": "Ils" },
+    { "dz": "Nta ouw ana natkalmou jazairia", "fr": "Moi et toi on parle algerien" },
+    { "dz": "Hiya ouw sa7batha, yamchou ydirou shopping", "fr": "Elle et sa copine vont faire du shopping" },
+    { "dz": "Houma kanou yaklou pizza", "fr": "Ils etaient en train de manger une pizza" },
+    { "dz": "Ntouma jitou b'tayara?", "fr": "Vous etes venus en avion ?" },
+    { "dz": "Ikhtibar sghir", "fr": "Petit quiz" }
+  ]
+}

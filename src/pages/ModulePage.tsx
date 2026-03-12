@@ -13,7 +13,7 @@ import {
   markModuleCompleted,
   updateWordProgress,
 } from "../store/progressStore";
-import { UserProgress, VocabularyModule } from "../types";
+import { TrainerWordState, UserProgress, VocabularyModule } from "../types";
 
 type ModulePageProps = {
   module: VocabularyModule;
@@ -22,29 +22,84 @@ type ModulePageProps = {
   onProgressChange: (nextProgress: UserProgress) => void;
 };
 
+const AUTO_ADVANCE_MS = 900;
+
 export const ModulePage = ({
   module,
   progress,
   onBack,
   onProgressChange,
 }: ModulePageProps) => {
+  const [sessionProgress, setSessionProgress] = useState<UserProgress>(progress);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "incorrect";
     message: string;
   } | null>(null);
   const [pendingAdvance, setPendingAdvance] = useState(false);
+  const [pendingProgress, setPendingProgress] = useState<UserProgress | null>(null);
+  const [currentWordState, setCurrentWordState] = useState<TrainerWordState | null>(() =>
+    getNextWord(module, progress),
+  );
+  const [debugEvents, setDebugEvents] = useState<string[]>([]);
 
-  const currentWordState = useMemo(() => getNextWord(module, progress), [module, progress]);
-  const masteredCount = getModuleMasteredCount(module, progress);
-  const completed = isModuleCompleted(module, progress);
-  const moduleProgress = getModuleProgress(progress, module);
+  const appendDebug = (message: string) => {
+    setDebugEvents((current) => [`${new Date().toLocaleTimeString()} ${message}`, ...current].slice(0, 12));
+  };
+
+  useEffect(() => {
+    setSessionProgress(progress);
+    setFeedback(null);
+    setPendingAdvance(false);
+    setPendingProgress(null);
+    setCurrentWordState(getNextWord(module, progress));
+    setDebugEvents([]);
+  }, [module.id]);
+
+  const masteredCount = getModuleMasteredCount(module, sessionProgress);
+  const completed = isModuleCompleted(module, sessionProgress);
+  const moduleProgress = getModuleProgress(sessionProgress, module);
+
+  useEffect(() => {
+    appendDebug(
+      `render word=${currentWordState?.word.dz ?? "none"} mode=${currentWordState?.attemptType ?? "none"} pending=${String(pendingAdvance)} feedback=${feedback?.type ?? "none"}`,
+    );
+  }, [currentWordState, feedback, pendingAdvance]);
+
+  useEffect(() => {
+    if (!pendingAdvance || !pendingProgress) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      const nextWord = getNextWord(module, pendingProgress);
+      setFeedback(null);
+      setPendingAdvance(false);
+      setSessionProgress(pendingProgress);
+      setCurrentWordState(nextWord);
+      onProgressChange(pendingProgress);
+      setPendingProgress(null);
+      appendDebug(
+        `auto-advance next-word=${nextWord?.word.dz ?? "none"} next-mode=${nextWord?.attemptType ?? "none"}`,
+      );
+    }, AUTO_ADVANCE_MS);
+
+    return () => window.clearTimeout(timerId);
+  }, [module, onProgressChange, pendingAdvance, pendingProgress]);
 
   useEffect(() => {
     if (completed && !moduleProgress.completed) {
-      const nextProgress = markModuleCompleted(progress, module);
+      const nextProgress = markModuleCompleted(sessionProgress, module);
+      setSessionProgress(nextProgress);
       onProgressChange(nextProgress);
+      appendDebug("module completed and committed");
     }
-  }, [completed, module, moduleProgress.completed, onProgressChange, progress]);
+  }, [completed, module, moduleProgress.completed, onProgressChange, sessionProgress]);
+
+  const progressLabel = useMemo(() => {
+    const currentProgress = pendingProgress ?? sessionProgress;
+    const currentMasteredCount = getModuleMasteredCount(module, currentProgress);
+    return `Word ${Math.min(currentMasteredCount + 1, module.words.length)} / ${module.words.length}`;
+  }, [module, pendingProgress, sessionProgress]);
 
   if (completed || !currentWordState) {
     return (
@@ -69,33 +124,37 @@ export const ModulePage = ({
     );
   }
 
-  const progressLabel = `Word ${masteredCount + 1} / ${module.words.length}`;
   const helperText =
     currentWordState.attemptType === "exposure"
       ? "First exposure: read the translation, then continue."
       : "Translate the Algerian word into French.";
 
   const handleExposureNext = () => {
-    const currentProgress = getWordProgress(progress, module.id, currentWordState.word);
+    const currentProgress = getWordProgress(sessionProgress, module.id, currentWordState.word);
     const nextProgress = updateWordProgress(
-      progress,
+      sessionProgress,
       module.id,
       currentWordState.word,
       markExposureComplete(currentProgress),
     );
 
     setFeedback(null);
+    setPendingAdvance(false);
+    setPendingProgress(null);
+    setSessionProgress(nextProgress);
+    setCurrentWordState(getNextWord(module, nextProgress));
     onProgressChange(nextProgress);
+    appendDebug(`exposure-next word=${currentWordState.word.dz}`);
   };
 
   const handleSubmit = (answer: string) => {
     const result = submitAnswer(
       currentWordState.word,
       answer,
-      getWordProgress(progress, module.id, currentWordState.word),
+      getWordProgress(sessionProgress, module.id, currentWordState.word),
     );
     const nextProgress = updateWordProgress(
-      progress,
+      sessionProgress,
       module.id,
       currentWordState.word,
       result.updatedProgress,
@@ -110,12 +169,26 @@ export const ModulePage = ({
           },
     );
     setPendingAdvance(true);
-    onProgressChange(nextProgress);
+    setPendingProgress(nextProgress);
+    appendDebug(`submit word=${currentWordState.word.dz} correct=${String(result.isCorrect)}`);
   };
 
   const handleContinue = () => {
+    if (!pendingProgress) {
+      appendDebug("manual-next ignored no pending progress");
+      return;
+    }
+
+    const nextWord = getNextWord(module, pendingProgress);
     setFeedback(null);
     setPendingAdvance(false);
+    setSessionProgress(pendingProgress);
+    setCurrentWordState(nextWord);
+    onProgressChange(pendingProgress);
+    setPendingProgress(null);
+    appendDebug(
+      `manual-next next-word=${nextWord?.word.dz ?? "none"} next-mode=${nextWord?.attemptType ?? "none"}`,
+    );
   };
 
   return (
@@ -130,17 +203,35 @@ export const ModulePage = ({
         </button>
       </header>
 
-      <WordTrainer
-        feedback={feedback}
-        helperText={helperText}
-        isAnswered={pendingAdvance}
-        mode={currentWordState.attemptType}
-        onContinue={handleContinue}
-        onNextExposure={handleExposureNext}
-        onSubmit={handleSubmit}
-        progressLabel={progressLabel}
-        word={currentWordState.word}
-      />
+      <div className="training-layout">
+        <WordTrainer
+          key={`${currentWordState.word.dz}-${currentWordState.attemptType}-${pendingAdvance ? "locked" : "open"}`}
+          feedback={feedback}
+          helperText={helperText}
+          isAnswered={pendingAdvance}
+          mode={currentWordState.attemptType}
+          onContinue={handleContinue}
+          onNextExposure={handleExposureNext}
+          onSubmit={handleSubmit}
+          progressLabel={progressLabel}
+          word={currentWordState.word}
+        />
+
+        <aside className="debug-card">
+          <p className="eyebrow">Debug</p>
+          <p><strong>Word:</strong> {currentWordState.word.dz}</p>
+          <p><strong>Mode:</strong> {currentWordState.attemptType}</p>
+          <p><strong>Input disabled:</strong> {pendingAdvance ? "yes" : "no"}</p>
+          <p><strong>Feedback:</strong> {feedback?.type ?? "none"}</p>
+          <p><strong>Pending progress:</strong> {pendingProgress ? "yes" : "no"}</p>
+          <p><strong>Mastered:</strong> {masteredCount} / {module.words.length}</p>
+          <div className="debug-log">
+            {debugEvents.map((event) => (
+              <p key={event}>{event}</p>
+            ))}
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };

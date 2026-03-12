@@ -31,7 +31,7 @@ export const Home = ({
       <section className="panel">
         <div className="section-heading">
           <h2>Modules</h2>
-          <span className="section-note">Simple, local, and ready for JSON modules later.</span>
+          <span className="section-note">Each sub-module contains at most 5 new inputs.</span>
         </div>
 
         <div className="module-grid">

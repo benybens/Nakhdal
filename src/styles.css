@@ -28,7 +28,7 @@ input {
 }
 
 .page-shell {
-  width: min(920px, calc(100% - 2rem));
+  width: min(1200px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 3rem 0 4rem;
 }
@@ -36,7 +36,8 @@ input {
 .hero,
 .panel,
 .trainer-card,
-.page-header {
+.page-header,
+.debug-card {
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(20, 33, 61, 0.08);
@@ -46,7 +47,8 @@ input {
 
 .hero,
 .panel,
-.trainer-card {
+.trainer-card,
+.debug-card {
   padding: 1.5rem;
 }
 
@@ -137,9 +139,17 @@ input {
   margin-bottom: 1.5rem;
 }
 
+.training-layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+}
+
 .trainer-card {
   text-align: center;
   max-width: 560px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -211,9 +221,34 @@ input {
   color: #c0392b;
 }
 
+.debug-card p {
+  margin: 0 0 0.6rem;
+}
+
+.debug-log {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(20, 33, 61, 0.08);
+  font-family: Consolas, monospace;
+  font-size: 0.85rem;
+  color: #52607a;
+}
+
+@media (max-width: 960px) {
+  .training-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .debug-card {
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .page-shell {
-    width: min(100% - 1.25rem, 920px);
+    width: min(100% - 1.25rem, 1200px);
     padding-top: 1.5rem;
   }
 

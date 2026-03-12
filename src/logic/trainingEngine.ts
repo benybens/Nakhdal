@@ -16,7 +16,17 @@ const normalizeAnswer = (value: string) =>
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+
+const stripLeadingArticle = (value: string) =>
+  value.replace(/^(l'|le |la |les |un |une |des |du |de la |de l')/i, "").trim();
+
+const getAnswerVariants = (value: string) => {
+  const normalizedValue = normalizeAnswer(value);
+  const withoutArticle = stripLeadingArticle(normalizedValue);
+  return Array.from(new Set([normalizedValue, withoutArticle].filter(Boolean)));
+};
 
 const getEditDistance = (source: string, target: string) => {
   const rows = source.length + 1;
@@ -47,14 +57,22 @@ const getEditDistance = (source: string, target: string) => {
 };
 
 const isAcceptedAnswer = (answer: string, expectedAnswer: string) => {
-  const normalizedAnswer = normalizeAnswer(answer);
-  const normalizedExpectedAnswer = normalizeAnswer(expectedAnswer);
+  const answerVariants = getAnswerVariants(answer);
+  const expectedVariants = getAnswerVariants(expectedAnswer);
 
-  if (normalizedAnswer === normalizedExpectedAnswer) {
-    return true;
+  for (const answerVariant of answerVariants) {
+    for (const expectedVariant of expectedVariants) {
+      if (answerVariant === expectedVariant) {
+        return true;
+      }
+
+      if (getEditDistance(answerVariant, expectedVariant) <= 1) {
+        return true;
+      }
+    }
   }
 
-  return getEditDistance(normalizedAnswer, normalizedExpectedAnswer) <= 1;
+  return false;
 };
 
 const shuffle = <T,>(items: T[]) => {
