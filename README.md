@@ -1,2 +1,10 @@
 # Nakhdal
-Application to learn Algerian language fast
+
+Simple Algerian-to-French vocabulary trainer built with React, TypeScript, and Vite.
+
+## Run
+
+```bash
+npm install
+npm run dev
+```
