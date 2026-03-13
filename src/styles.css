@@ -98,10 +98,59 @@ input {
   gap: 1rem;
 }
 
-.module-grid {
+.module-grid,
+.lesson-list,
+.lesson-submodules {
   display: grid;
   gap: 1rem;
   margin-top: 1rem;
+}
+
+.lesson-group {
+  border: 1px solid rgba(20, 33, 61, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0.75rem;
+}
+
+.lesson-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lesson-toggle__title {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.lesson-toggle__meta {
+  display: block;
+  margin-top: 0.2rem;
+  color: #52607a;
+  font-size: 0.92rem;
+}
+
+.lesson-toggle__chevron {
+  font-size: 1.2rem;
+  transition: transform 160ms ease;
+}
+
+.lesson-toggle__chevron--open {
+  transform: rotate(180deg);
+}
+
+.lesson-submodules {
+  margin-top: 0.5rem;
 }
 
 .module-card {
@@ -254,11 +303,7 @@ input {
 
   .panel--compact,
   .section-heading,
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
+  .page-header,
   .module-card {
     flex-direction: column;
     align-items: flex-start;
