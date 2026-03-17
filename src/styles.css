@@ -463,8 +463,36 @@ input {
   opacity: 0.62;
 }
 
-.trainer-next-button {
+.countdown-block {
   margin-top: 1rem;
+}
+
+.countdown-bar {
+  position: relative;
+  height: 0.55rem;
+  width: 100%;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 102, 51, 0.1);
+}
+
+:root[data-theme="dark"] .countdown-bar {
+  background: rgba(143, 206, 176, 0.14);
+}
+
+.countdown-bar__fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red-soft) 0%, var(--green) 100%);
+  box-shadow: 0 0 18px rgba(0, 102, 51, 0.18);
+}
+
+.trainer-next-button {
+  margin-top: 0.9rem;
 }
 
 .primary-button,

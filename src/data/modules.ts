@@ -27,7 +27,7 @@ const sourceModules: VocabularyModule[] = [
   lesson08KeyExpressions,
 ] as VocabularyModule[];
 
-const MAX_WORDS_PER_MODULE = 5;
+const MAX_WORDS_PER_MODULE = 10;
 
 const normalizeWordKey = (value: string) =>
   value
@@ -237,3 +237,4 @@ const splitModule = (module: VocabularyModule): VocabularyModule[] => {
 };
 
 export const modules: VocabularyModule[] = curatedModules.flatMap(splitModule);
+
