@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and deploy the Nakhdal app to outlandsight.com/nakhdar.
+"""Build and deploy the Nahdar app to outlandsight.com/nahdar.
 
 Supported protocols:
 - ftp
@@ -7,8 +7,8 @@ Supported protocols:
 - sftp (requires paramiko)
 
 Examples:
-  python scripts/deploy_nakhdar.py
-  python scripts/deploy_nakhdar.py --config scripts/deploy_config.json
+  python scripts/deploy_nahdar.py
+  python scripts/deploy_nahdar.py --config scripts/deploy_config.json
 
 JSON config example:
 {
@@ -17,7 +17,7 @@ JSON config example:
   "port": 21,
   "username": "your_username",
   "password": "your_password",
-  "remote_dir": "public_html/nakhdar"
+  "remote_dir": "public_html/nahdar"
 }
 """
 
@@ -37,7 +37,7 @@ from typing import Any, Iterable
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = ROOT_DIR / "dist"
-DEFAULT_REMOTE_DIR = "public_html/nakhdar"
+DEFAULT_REMOTE_DIR = "public_html/nahdar"
 DEFAULT_CONFIG_PATH = ROOT_DIR / "scripts" / "deploy_config.json"
 
 
@@ -57,7 +57,7 @@ class DeploymentError(RuntimeError):
 
 
 def parse_args() -> DeployConfig:
-    parser = argparse.ArgumentParser(description="Deploy Nakhdal to a web host.")
+    parser = argparse.ArgumentParser(description="Deploy Nahdar to a web host.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
     parser.add_argument("--skip-build", action="store_true")
     args = parser.parse_args()
@@ -242,7 +242,7 @@ def main() -> int:
             )
 
         print("[deploy] Deployment complete.")
-        print("[deploy] Expected public URL: https://outlandsight.com/nakhdar/")
+        print("[deploy] Expected public URL: https://outlandsight.com/nahdar/")
         return 0
     except DeploymentError as error:
         print(f"[deploy] Error: {error}", file=sys.stderr)
@@ -251,3 +251,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

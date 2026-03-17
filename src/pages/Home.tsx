@@ -62,7 +62,7 @@ export const Home = ({
   return (
     <div className="page-shell">
       <header className="hero">
-        <p className="page-kicker">Nakhdal</p>
+        <p className="page-kicker">Nahdar</p>
         <h1>Algerian to French vocabulary trainer</h1>
         <p className="hero-copy">
           Learn module by module, master each word twice, then keep reviewing in an
@@ -144,3 +144,4 @@ export const Home = ({
     </div>
   );
 };
+
