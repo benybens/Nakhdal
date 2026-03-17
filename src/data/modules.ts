@@ -29,7 +29,13 @@ const sourceModules: VocabularyModule[] = [
 
 const MAX_WORDS_PER_MODULE = 5;
 
-const isSinglePromptTerm = (value: string) => /^[^\s,?.!;:]+$/.test(value.trim());
+const normalizeWordKey = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/^[?.!;:,]+|[?.!;:,]+$/g, "");
+
+const isSinglePromptTerm = (value: string) => /^[^\s]+$/.test(normalizeWordKey(value));
 
 const wordIndex = new Map<string, VocabularyWord>();
 
@@ -39,7 +45,7 @@ for (const module of sourceModules) {
       continue;
     }
 
-    const key = word.dz.trim().toLowerCase();
+    const key = normalizeWordKey(word.dz);
     if (!wordIndex.has(key)) {
       wordIndex.set(key, word);
     }
@@ -47,7 +53,7 @@ for (const module of sourceModules) {
 }
 
 const pickWord = (dz: string): VocabularyWord => {
-  const word = wordIndex.get(dz.trim().toLowerCase());
+  const word = wordIndex.get(normalizeWordKey(dz));
 
   if (!word) {
     throw new Error(`Missing curated word: ${dz}`);
@@ -63,7 +69,7 @@ const createModule = (id: string, title: string, words: string[]): VocabularyMod
 });
 
 const curatedModules: VocabularyModule[] = [
-  createModule("core_pronouns", "1. Les mots essentiels - Pronoms", [
+  createModule("core_pronouns", "Moi, toi, nous", [
     "Ana",
     "Nta",
     "Ntia",
@@ -73,7 +79,7 @@ const curatedModules: VocabularyModule[] = [
     "Ntouma",
     "Houma",
   ]),
-  createModule("core_grammar", "2. Les mots essentiels - Liens et grammaire", [
+  createModule("core_grammar", "Les petits mots qui relient tout", [
     "Rani",
     "3andi",
     "Khassni",
@@ -83,7 +89,7 @@ const curatedModules: VocabularyModule[] = [
     "Ouw",
     "Bessa7",
   ]),
-  createModule("core_daily_verbs", "3. Les verbes les plus courants", [
+  createModule("core_daily_verbs", "Les verbes que tu vas sortir tout le temps", [
     "N'7ab",
     "N'dir",
     "N'ji",
@@ -95,7 +101,7 @@ const curatedModules: VocabularyModule[] = [
     "Na9ra",
     "Nahdar",
   ]),
-  createModule("core_question_time", "4. Questions, temps et reperes", [
+  createModule("core_question_time", "Quand, où, comment", [
     "Wash",
     "Kiffach",
     "Ch7al",
@@ -107,7 +113,7 @@ const curatedModules: VocabularyModule[] = [
     "Hnak",
     "Kayan",
   ]),
-  createModule("people_family", "5. Personnes et famille", [
+  createModule("people_family", "La famille, les gens, le monde autour", [
     "Khouya",
     "Khti",
     "3aila",
@@ -120,7 +126,7 @@ const curatedModules: VocabularyModule[] = [
     "Bint",
     "Wald",
   ]),
-  createModule("daily_actions", "6. Actions du quotidien", [
+  createModule("daily_actions", "Les gestes du quotidien", [
     "N'chouf",
     "Nasma3",
     "Nachri",
@@ -132,7 +138,7 @@ const curatedModules: VocabularyModule[] = [
     "N'mad",
     "N'sana",
   ]),
-  createModule("daily_places_objects", "7. Maison, travail et objets courants", [
+  createModule("daily_places_objects", "La maison, le boulot, les trucs de tous les jours", [
     "Dar",
     "Khadma",
     "Sou9",
@@ -145,7 +151,7 @@ const curatedModules: VocabularyModule[] = [
     "Bab",
     "Lwa9t",
   ]),
-  createModule("demonstratives_possessives", "8. Demonstratifs et possessifs", [
+  createModule("demonstratives_possessives", "À moi, à toi, celui-là", [
     "Hada",
     "Hadi",
     "Had",
@@ -158,7 +164,7 @@ const curatedModules: VocabularyModule[] = [
     "Ta3ha",
     "Ta3na",
   ]),
-  createModule("descriptions", "9. Adjectifs et description", [
+  createModule("descriptions", "Décrire les choses comme on les voit", [
     "Mli7",
     "Chaba",
     "Ghaya",
@@ -171,7 +177,7 @@ const curatedModules: VocabularyModule[] = [
     "Mrigle",
     "Wa9ila",
   ]),
-  createModule("social_words", "10. Paroles sociales et utiles", [
+  createModule("social_words", "Les expressions qui font la diff", [
     "Arwa7",
     "Arwa7i",
     "Arwa7ou",
@@ -183,7 +189,7 @@ const curatedModules: VocabularyModule[] = [
     "Hakou",
     "Bssa7tek",
   ]),
-  createModule("nature_world", "11. Nature et monde", [
+  createModule("nature_world", "Le ciel, la rue, la terre", [
     "Tabi3a",
     "Chams",
     "Lb7ar",
@@ -195,7 +201,7 @@ const curatedModules: VocabularyModule[] = [
     "Lahwa",
     "Trab",
   ]),
-  createModule("extended_verbs", "12. Verbes et vocabulaire secondaires", [
+  createModule("extended_verbs", "Encore plus de mots pour aller plus loin", [
     "N'7al",
     "N'7at",
     "N'khali",

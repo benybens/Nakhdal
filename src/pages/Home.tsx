@@ -63,17 +63,16 @@ export const Home = ({
     <div className="page-shell">
       <header className="hero">
         <p className="page-kicker">Nahdar</p>
-        <h1>Entraineur de mots algerien vers francais</h1>
+        <h1>Tu commences à parler algérien sans t'en rendre compte</h1>
         <p className="hero-copy">
-          Apprends des lecons thematiques classees des mots algeriens les plus utiles au quotidien vers les termes moins frequents, puis continue avec une
-          session de revision sans fin.
+          Des mots du quotidien, thème par thème, puis une révision qui tourne sans fin.
         </p>
       </header>
 
       <section className="panel">
         <div className="section-heading">
-          <h2>Lecons</h2>
-          <span className="section-note">Les lecons sont groupees par theme et ordonnees des mots du quotidien les plus frequents aux termes moins courants.</span>
+          <h2>Par où on commence ?</h2>
+          <span className="section-note">Choisis un thème et laisse les mots venir tranquilles.</span>
         </div>
 
         <div className="lesson-list">
@@ -82,7 +81,13 @@ export const Home = ({
             const completedModules = lesson.modules.filter((module) =>
               isModuleCompleted(module, progress),
             ).length;
-            const lessonProgress = `${completedModules} / ${lesson.modules.length} sous-modules maitrises`;
+
+            let lessonProgress = "Pas encore exploré";
+            if (completedModules > 0 && completedModules < lesson.modules.length) {
+              lessonProgress = `Tu as déjà ouvert ${completedModules} module${completedModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
+            } else if (completedModules === lesson.modules.length) {
+              lessonProgress = "Déjà vu, tu connais ça";
+            }
 
             return (
               <section className="lesson-group" key={lesson.id}>
@@ -107,8 +112,10 @@ export const Home = ({
                       const masteredCount = getModuleMasteredCount(module, progress);
                       const completed = isModuleCompleted(module, progress);
                       const progressLabel = completed
-                        ? "100 % maitrise"
-                        : `${masteredCount} / ${module.words.length} maitrises`;
+                        ? "Tu connais ça"
+                        : masteredCount > 0
+                          ? `Encore ${module.words.length - masteredCount} mot${module.words.length - masteredCount > 1 ? "s" : ""}`
+                          : "Pas encore exploré";
 
                       return (
                         <ModuleCard
@@ -129,8 +136,12 @@ export const Home = ({
 
       <section className="panel panel--compact">
         <div className="section-heading">
-          <h2>Session de revision</h2>
-          <span className="section-note">Disponible apres avoir termine au moins un module.</span>
+          <h2>Le coin révision</h2>
+          <span className="section-note">
+            {canStartTraining
+              ? "Encore un tour ?"
+              : "Encore quelques mots et tu débloques la révision."}
+          </span>
         </div>
         <button
           className="primary-button"
@@ -138,7 +149,7 @@ export const Home = ({
           onClick={onOpenTraining}
           type="button"
         >
-          Commencer la revision
+          Continuer
         </button>
       </section>
     </div>

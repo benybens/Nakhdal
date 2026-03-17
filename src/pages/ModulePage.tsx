@@ -115,18 +115,18 @@ export const ModulePage = ({
       <div className="page-shell">
         <header className="page-header">
           <div>
-            <p className="page-kicker">Module termine</p>
+            <p className="page-kicker">Déjà vu</p>
             <h1>{module.title}</h1>
           </div>
           <button className="secondary-button" onClick={onBack} type="button">
-            Retour a l'accueil
+            Retour à l'accueil
           </button>
         </header>
 
         <section className="trainer-card">
-          <h2>Tous les mots sont maitrises</h2>
+          <h2>Tu connais ça</h2>
           <p className="helper-text">
-            Ce module est maintenant a 100 % et ses mots ont ete ajoutes a la revision.
+            Bien joué. Tu viens d'ajouter un nouveau bout d'algérien à ton oreille.
           </p>
         </section>
       </div>
@@ -135,7 +135,7 @@ export const ModulePage = ({
 
   const helperText =
     currentWordState.attemptType === "exposure"
-      ? "Premiere exposition : lis la traduction, puis continue."
+      ? "Tu regardes, tu captes, tu continues."
       : "Choisis la bonne traduction parmi quatre cartes.";
 
   const handleExposureNext = () => {
@@ -171,10 +171,10 @@ export const ModulePage = ({
 
     setFeedback(
       result.isCorrect
-        ? { type: "correct", message: "Correct" }
+        ? { type: "correct", message: "Oui, c'est ça" }
         : {
             type: "incorrect",
-            message: `Incorrect. Bonne reponse : ${result.correctAnswer}`,
+            message: `Pas cette fois. La bonne réponse, c'était : ${result.correctAnswer}`,
           },
     );
     setPendingAdvance(true);
@@ -204,11 +204,11 @@ export const ModulePage = ({
     <div className="page-shell">
       <header className="page-header">
         <div>
-          <p className="page-kicker">Entrainement du module</p>
+          <p className="page-kicker">En route</p>
           <h1>{module.title}</h1>
         </div>
         <button className="secondary-button" onClick={onBack} type="button">
-          Retour a l'accueil
+          Retour à l'accueil
         </button>
       </header>
 
@@ -231,10 +231,10 @@ export const ModulePage = ({
           <p className="eyebrow">Debug</p>
           <p><strong>Mot :</strong> {currentWordState.word.dz}</p>
           <p><strong>Mode :</strong> {currentWordState.attemptType}</p>
-          <p><strong>Saisie desactivee :</strong> {pendingAdvance ? "oui" : "non"}</p>
+          <p><strong>Saisie désactivée :</strong> {pendingAdvance ? "oui" : "non"}</p>
           <p><strong>Retour :</strong> {feedback?.type ?? "aucun"}</p>
           <p><strong>Progression en attente :</strong> {pendingProgress ? "oui" : "non"}</p>
-          <p><strong>Maitrises :</strong> {masteredCount} / {module.words.length}</p>
+          <p><strong>Déjà vus :</strong> {masteredCount} / {module.words.length}</p>
           <div className="debug-log">
             {debugEvents.map((event) => (
               <p key={event}>{event}</p>
