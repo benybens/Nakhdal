@@ -25,7 +25,7 @@ type ModulePageProps = {
 
 const AUTO_ADVANCE_MS = 900;
 
-export const ModulePage = ({
+const ModulePage = ({
   module,
   progress,
   onBack,
@@ -41,11 +41,6 @@ export const ModulePage = ({
   const [currentWordState, setCurrentWordState] = useState<TrainerWordState | null>(() =>
     getNextWord(module, progress),
   );
-  const [debugEvents, setDebugEvents] = useState<string[]>([]);
-
-  const appendDebug = (message: string) => {
-    setDebugEvents((current) => [`${new Date().toLocaleTimeString()} ${message}`, ...current].slice(0, 12));
-  };
 
   useEffect(() => {
     setSessionProgress(progress);
@@ -53,8 +48,7 @@ export const ModulePage = ({
     setPendingAdvance(false);
     setPendingProgress(null);
     setCurrentWordState(getNextWord(module, progress));
-    setDebugEvents([]);
-  }, [module.id]);
+  }, [module.id, progress]);
 
   const questionOptions = useMemo(() => {
     if (!currentWordState || currentWordState.attemptType !== "question") {
@@ -64,15 +58,8 @@ export const ModulePage = ({
     return getQuestionOptions(currentWordState.word, module.words);
   }, [currentWordState, module.words]);
 
-  const masteredCount = getModuleMasteredCount(module, sessionProgress);
   const completed = isModuleCompleted(module, sessionProgress);
   const moduleProgress = getModuleProgress(sessionProgress, module);
-
-  useEffect(() => {
-    appendDebug(
-      `render word=${currentWordState?.word.dz ?? "none"} mode=${currentWordState?.attemptType ?? "none"} pending=${String(pendingAdvance)} feedback=${feedback?.type ?? "none"}`,
-    );
-  }, [currentWordState, feedback, pendingAdvance]);
 
   useEffect(() => {
     if (!pendingAdvance || !pendingProgress) {
@@ -87,9 +74,6 @@ export const ModulePage = ({
       setCurrentWordState(nextWord);
       onProgressChange(pendingProgress);
       setPendingProgress(null);
-      appendDebug(
-        `auto-advance next-word=${nextWord?.word.dz ?? "none"} next-mode=${nextWord?.attemptType ?? "none"}`,
-      );
     }, AUTO_ADVANCE_MS);
 
     return () => window.clearTimeout(timerId);
@@ -100,7 +84,6 @@ export const ModulePage = ({
       const nextProgress = markModuleCompleted(sessionProgress, module);
       setSessionProgress(nextProgress);
       onProgressChange(nextProgress);
-      appendDebug("module completed and committed");
     }
   }, [completed, module, moduleProgress.completed, onProgressChange, sessionProgress]);
 
@@ -115,18 +98,18 @@ export const ModulePage = ({
       <div className="page-shell">
         <header className="page-header">
           <div>
-            <p className="page-kicker">D√©j√† vu</p>
+            <p className="page-kicker">DÈj‡ vu</p>
             <h1>{module.title}</h1>
           </div>
           <button className="secondary-button" onClick={onBack} type="button">
-            Retour √† l'accueil
+            Retour ‡ l'accueil
           </button>
         </header>
 
         <section className="trainer-card">
-          <h2>Tu connais √ßa</h2>
+          <h2>Tu connais Áa</h2>
           <p className="helper-text">
-            Bien jou√©. Tu viens d'ajouter un nouveau bout d'alg√©rien √† ton oreille.
+            Bien jouÈ. Tu viens d'ajouter un nouveau bout d'algÈrien ‡ ton oreille.
           </p>
         </section>
       </div>
@@ -153,7 +136,6 @@ export const ModulePage = ({
     setSessionProgress(nextProgress);
     setCurrentWordState(getNextWord(module, nextProgress));
     onProgressChange(nextProgress);
-    appendDebug(`exposure-next word=${currentWordState.word.dz}`);
   };
 
   const handleSubmit = (answer: string) => {
@@ -171,20 +153,18 @@ export const ModulePage = ({
 
     setFeedback(
       result.isCorrect
-        ? { type: "correct", message: "Oui, c'est √ßa" }
+        ? { type: "correct", message: "Oui, c'est Áa" }
         : {
             type: "incorrect",
-            message: `Pas cette fois. La bonne r√©ponse, c'√©tait : ${result.correctAnswer}`,
+            message: `Pas cette fois. La bonne rÈponse, c'Ètait : ${result.correctAnswer}`,
           },
     );
     setPendingAdvance(true);
     setPendingProgress(nextProgress);
-    appendDebug(`submit word=${currentWordState.word.dz} correct=${String(result.isCorrect)}`);
   };
 
   const handleContinue = () => {
     if (!pendingProgress) {
-      appendDebug("manual-next ignored no pending progress");
       return;
     }
 
@@ -195,9 +175,6 @@ export const ModulePage = ({
     setCurrentWordState(nextWord);
     onProgressChange(pendingProgress);
     setPendingProgress(null);
-    appendDebug(
-      `manual-next next-word=${nextWord?.word.dz ?? "none"} next-mode=${nextWord?.attemptType ?? "none"}`,
-    );
   };
 
   return (
@@ -208,40 +185,26 @@ export const ModulePage = ({
           <h1>{module.title}</h1>
         </div>
         <button className="secondary-button" onClick={onBack} type="button">
-          Retour √† l'accueil
+          Retour ‡ l'accueil
         </button>
       </header>
 
-      <div className="training-layout">
-        <WordTrainer
-          key={`${currentWordState.word.dz}-${currentWordState.attemptType}-${pendingAdvance ? "locked" : "open"}`}
-          feedback={feedback}
-          helperText={helperText}
-          isAnswered={pendingAdvance}
-          mode={currentWordState.attemptType}
-          onContinue={handleContinue}
-          onNextExposure={handleExposureNext}
-          onSubmit={handleSubmit}
-          options={questionOptions}
-          progressLabel={progressLabel}
-          word={currentWordState.word}
-        />
-
-        <aside className="debug-card">
-          <p className="eyebrow">Debug</p>
-          <p><strong>Mot :</strong> {currentWordState.word.dz}</p>
-          <p><strong>Mode :</strong> {currentWordState.attemptType}</p>
-          <p><strong>Saisie d√©sactiv√©e :</strong> {pendingAdvance ? "oui" : "non"}</p>
-          <p><strong>Retour :</strong> {feedback?.type ?? "aucun"}</p>
-          <p><strong>Progression en attente :</strong> {pendingProgress ? "oui" : "non"}</p>
-          <p><strong>D√©j√† vus :</strong> {masteredCount} / {module.words.length}</p>
-          <div className="debug-log">
-            {debugEvents.map((event) => (
-              <p key={event}>{event}</p>
-            ))}
-          </div>
-        </aside>
-      </div>
+      <WordTrainer
+        key={`${currentWordState.word.dz}-${currentWordState.attemptType}-${pendingAdvance ? "locked" : "open"}`}
+        feedback={feedback}
+        helperText={helperText}
+        isAnswered={pendingAdvance}
+        mode={currentWordState.attemptType}
+        onContinue={handleContinue}
+        onNextExposure={handleExposureNext}
+        onSubmit={handleSubmit}
+        options={questionOptions}
+        progressLabel={progressLabel}
+        word={currentWordState.word}
+      />
     </div>
   );
 };
+
+export { ModulePage };
+export default ModulePage;

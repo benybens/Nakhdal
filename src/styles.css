@@ -1,9 +1,25 @@
 :root {
+  --bg-cream: #f8faf4;
+  --bg-mist: #edf5ee;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --surface-soft: rgba(246, 251, 247, 0.84);
+  --line: rgba(0, 102, 51, 0.12);
+  --line-strong: rgba(0, 102, 51, 0.2);
+  --text-main: #17392a;
+  --text-soft: #5f7669;
+  --green: #006633;
+  --green-soft: #7fb99b;
+  --green-pale: #dceee3;
+  --red: #d21034;
+  --red-soft: #e993a5;
+  --red-pale: #f8dfe6;
   font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-  color: #14213d;
+  color: var(--text-main);
   background:
-    radial-gradient(circle at top, rgba(242, 201, 76, 0.25), transparent 35%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    radial-gradient(circle at top left, rgba(0, 102, 51, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(210, 16, 52, 0.12), transparent 24%),
+    linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-mist) 100%);
   line-height: 1.5;
   font-weight: 400;
 }
@@ -16,6 +32,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(0, 102, 51, 0.14), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(210, 16, 52, 0.12), transparent 18%),
+    linear-gradient(180deg, #fbfdf8 0%, #eef5ef 100%);
 }
 
 button,
@@ -38,11 +58,13 @@ input {
 .trainer-card,
 .page-header,
 .debug-card {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(20, 33, 61, 0.08);
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
   border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 20px 50px rgba(29, 58, 43, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .hero,
@@ -54,6 +76,9 @@ input {
 
 .hero {
   margin-bottom: 1.5rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(240, 248, 242, 0.86)),
+    var(--surface);
 }
 
 .hero h1,
@@ -61,22 +86,23 @@ input {
   margin: 0.25rem 0 0;
   font-size: clamp(2rem, 5vw, 3rem);
   line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 .hero-copy,
 .section-note,
 .helper-text {
-  color: #52607a;
+  color: var(--text-soft);
 }
 
 .page-kicker,
 .eyebrow {
   margin: 0;
-  color: #8d6e00;
+  color: var(--green);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.8rem;
-  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .panel {
@@ -107,9 +133,9 @@ input {
 }
 
 .lesson-group {
-  border: 1px solid rgba(20, 33, 61, 0.08);
+  border: 1px solid var(--line);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(241, 248, 243, 0.78));
   padding: 0.75rem;
 }
 
@@ -119,7 +145,7 @@ input {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0.9rem;
+  padding: 0.85rem 1rem;
   border: none;
   background: transparent;
   color: inherit;
@@ -136,12 +162,20 @@ input {
 .lesson-toggle__meta {
   display: block;
   margin-top: 0.2rem;
-  color: #52607a;
+  color: var(--text-soft);
   font-size: 0.92rem;
 }
 
 .lesson-toggle__chevron {
-  font-size: 1.2rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--green-pale);
+  color: var(--green);
+  font-size: 1rem;
   transition: transform 160ms ease;
 }
 
@@ -161,18 +195,20 @@ input {
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-radius: 18px;
-  border: 1px solid rgba(20, 33, 61, 0.08);
-  background: #ffffff;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
   color: inherit;
   cursor: pointer;
   transition:
     transform 160ms ease,
-    box-shadow 160ms ease;
+    box-shadow 160ms ease,
+    border-color 160ms ease;
 }
 
 .module-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(20, 33, 61, 0.08);
+  border-color: var(--line-strong);
+  box-shadow: 0 12px 28px rgba(29, 58, 43, 0.08);
 }
 
 .module-card__title {
@@ -180,12 +216,13 @@ input {
 }
 
 .module-card__progress {
-  color: #52607a;
+  color: var(--text-soft);
 }
 
 .page-header {
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 249, 245, 0.82));
 }
 
 .training-layout {
@@ -200,12 +237,16 @@ input {
   max-width: 560px;
   width: 100%;
   margin: 0 auto;
+  background:
+    radial-gradient(circle at top, rgba(0, 102, 51, 0.06), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 250, 246, 0.92));
 }
 
 .trainer-word {
   font-size: clamp(2.8rem, 10vw, 4.5rem);
   line-height: 1;
   margin: 1rem 0;
+  color: var(--green);
 }
 
 .trainer-translation {
@@ -225,21 +266,23 @@ input {
   min-height: 96px;
   padding: 1rem;
   border-radius: 18px;
-  border: 1px solid rgba(20, 33, 61, 0.12);
-  background: #ffffff;
-  color: #14213d;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff, #f4faf6);
+  color: var(--text-main);
   font-weight: 600;
   cursor: pointer;
   transition:
     transform 140ms ease,
     box-shadow 140ms ease,
-    border-color 140ms ease;
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
 .choice-card:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(20, 33, 61, 0.08);
-  border-color: rgba(20, 33, 61, 0.2);
+  box-shadow: 0 10px 24px rgba(29, 58, 43, 0.08);
+  border-color: var(--green-soft);
+  background: linear-gradient(180deg, #ffffff, #eef8f1);
 }
 
 .choice-card:disabled {
@@ -247,13 +290,13 @@ input {
 }
 
 .choice-card--correct {
-  background: rgba(24, 121, 78, 0.1);
-  border-color: rgba(24, 121, 78, 0.45);
-  color: #18794e;
+  background: linear-gradient(180deg, #f7fdf9, #e2f2e8);
+  border-color: rgba(0, 102, 51, 0.38);
+  color: var(--green);
 }
 
 .choice-card--disabled {
-  opacity: 0.6;
+  opacity: 0.62;
 }
 
 .trainer-next-button {
@@ -264,24 +307,35 @@ input {
 .secondary-button {
   border: none;
   border-radius: 999px;
-  padding: 0.85rem 1.25rem;
+  padding: 0.9rem 1.3rem;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
 }
 
 .primary-button {
-  background: #14213d;
+  background: linear-gradient(135deg, var(--green) 0%, #0e7b44 100%);
   color: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 102, 51, 0.2);
+}
+
+.primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .primary-button:disabled {
-  background: #97a3b6;
+  background: linear-gradient(135deg, #a8bbb0 0%, #b9c8bf 100%);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 .secondary-button {
-  background: #edf2f7;
-  color: #14213d;
+  background: linear-gradient(180deg, #ffffff, #f0f5f1);
+  color: var(--green);
+  border: 1px solid var(--line);
 }
 
 .feedback {
@@ -290,11 +344,11 @@ input {
 }
 
 .feedback--correct {
-  color: #18794e;
+  color: var(--green);
 }
 
 .feedback--incorrect {
-  color: #c0392b;
+  color: #b13b57;
 }
 
 .debug-card p {
@@ -304,10 +358,10 @@ input {
 .debug-log {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(20, 33, 61, 0.08);
+  border-top: 1px solid var(--line);
   font-family: Consolas, monospace;
   font-size: 0.85rem;
-  color: #52607a;
+  color: var(--text-soft);
 }
 
 @media (max-width: 960px) {
