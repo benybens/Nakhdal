@@ -98,7 +98,7 @@ export const ModulePage = ({
   const progressLabel = useMemo(() => {
     const currentProgress = pendingProgress ?? sessionProgress;
     const currentMasteredCount = getModuleMasteredCount(module, currentProgress);
-    return `Word ${Math.min(currentMasteredCount + 1, module.words.length)} / ${module.words.length}`;
+    return `Mot ${Math.min(currentMasteredCount + 1, module.words.length)} / ${module.words.length}`;
   }, [module, pendingProgress, sessionProgress]);
 
   if (completed || !currentWordState) {
@@ -106,18 +106,18 @@ export const ModulePage = ({
       <div className="page-shell">
         <header className="page-header">
           <div>
-            <p className="page-kicker">Module Complete</p>
+            <p className="page-kicker">Module termine</p>
             <h1>{module.title}</h1>
           </div>
           <button className="secondary-button" onClick={onBack} type="button">
-            Back Home
+            Retour a l'accueil
           </button>
         </header>
 
         <section className="trainer-card">
-          <h2>All words mastered</h2>
+          <h2>Tous les mots sont maitrises</h2>
           <p className="helper-text">
-            This module is now at 100% and its words were added to the revision pool.
+            Ce module est maintenant a 100 % et ses mots ont ete ajoutes a la revision.
           </p>
         </section>
       </div>
@@ -126,8 +126,8 @@ export const ModulePage = ({
 
   const helperText =
     currentWordState.attemptType === "exposure"
-      ? "First exposure: read the translation, then continue."
-      : "Translate the Algerian word or verb into French.";
+      ? "Premiere exposition : lis la traduction, puis continue."
+      : "Traduis le mot ou le verbe algerien en francais.";
 
   const handleExposureNext = () => {
     const currentProgress = getWordProgress(sessionProgress, module.id, currentWordState.word);
@@ -165,7 +165,7 @@ export const ModulePage = ({
         ? { type: "correct", message: "Correct" }
         : {
             type: "incorrect",
-            message: `Incorrect. Correct answer: ${result.correctAnswer}`,
+            message: `Incorrect. Bonne reponse : ${result.correctAnswer}`,
           },
     );
     setPendingAdvance(true);
@@ -195,11 +195,11 @@ export const ModulePage = ({
     <div className="page-shell">
       <header className="page-header">
         <div>
-          <p className="page-kicker">Module Training</p>
+          <p className="page-kicker">Entrainement du module</p>
           <h1>{module.title}</h1>
         </div>
         <button className="secondary-button" onClick={onBack} type="button">
-          Back Home
+          Retour a l'accueil
         </button>
       </header>
 
@@ -219,12 +219,12 @@ export const ModulePage = ({
 
         <aside className="debug-card">
           <p className="eyebrow">Debug</p>
-          <p><strong>Word:</strong> {currentWordState.word.dz}</p>
-          <p><strong>Mode:</strong> {currentWordState.attemptType}</p>
-          <p><strong>Input disabled:</strong> {pendingAdvance ? "yes" : "no"}</p>
-          <p><strong>Feedback:</strong> {feedback?.type ?? "none"}</p>
-          <p><strong>Pending progress:</strong> {pendingProgress ? "yes" : "no"}</p>
-          <p><strong>Mastered:</strong> {masteredCount} / {module.words.length}</p>
+          <p><strong>Mot :</strong> {currentWordState.word.dz}</p>
+          <p><strong>Mode :</strong> {currentWordState.attemptType}</p>
+          <p><strong>Saisie desactivee :</strong> {pendingAdvance ? "oui" : "non"}</p>
+          <p><strong>Retour :</strong> {feedback?.type ?? "aucun"}</p>
+          <p><strong>Progression en attente :</strong> {pendingProgress ? "oui" : "non"}</p>
+          <p><strong>Maitrises :</strong> {masteredCount} / {module.words.length}</p>
           <div className="debug-log">
             {debugEvents.map((event) => (
               <p key={event}>{event}</p>
@@ -235,4 +235,3 @@ export const ModulePage = ({
     </div>
   );
 };
-

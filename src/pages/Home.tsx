@@ -63,17 +63,17 @@ export const Home = ({
     <div className="page-shell">
       <header className="hero">
         <p className="page-kicker">Nahdar</p>
-        <h1>Algerian to French word trainer</h1>
+        <h1>Entraineur de mots algerien vers francais</h1>
         <p className="hero-copy">
-          Learn module by module, master each word twice, then keep reviewing in an
-          endless training session.
+          Apprends des lecons thematiques classees des mots algeriens les plus utiles au quotidien vers les termes moins frequents, puis continue avec une
+          session de revision sans fin.
         </p>
       </header>
 
       <section className="panel">
         <div className="section-heading">
-          <h2>Lessons</h2>
-          <span className="section-note">Open a lesson to reveal its word-focused sub-modules.</span>
+          <h2>Lecons</h2>
+          <span className="section-note">Les lecons sont groupees par theme et ordonnees des mots du quotidien les plus frequents aux termes moins courants.</span>
         </div>
 
         <div className="lesson-list">
@@ -82,7 +82,7 @@ export const Home = ({
             const completedModules = lesson.modules.filter((module) =>
               isModuleCompleted(module, progress),
             ).length;
-            const lessonProgress = `${completedModules} / ${lesson.modules.length} sub-modules mastered`;
+            const lessonProgress = `${completedModules} / ${lesson.modules.length} sous-modules maitrises`;
 
             return (
               <section className="lesson-group" key={lesson.id}>
@@ -107,8 +107,8 @@ export const Home = ({
                       const masteredCount = getModuleMasteredCount(module, progress);
                       const completed = isModuleCompleted(module, progress);
                       const progressLabel = completed
-                        ? "100% mastered"
-                        : `${masteredCount} / ${module.words.length} mastered`;
+                        ? "100 % maitrise"
+                        : `${masteredCount} / ${module.words.length} maitrises`;
 
                       return (
                         <ModuleCard
@@ -129,8 +129,8 @@ export const Home = ({
 
       <section className="panel panel--compact">
         <div className="section-heading">
-          <h2>Training Session</h2>
-          <span className="section-note">Available after at least one module is completed.</span>
+          <h2>Session de revision</h2>
+          <span className="section-note">Disponible apres avoir termine au moins un module.</span>
         </div>
         <button
           className="primary-button"
@@ -138,11 +138,9 @@ export const Home = ({
           onClick={onOpenTraining}
           type="button"
         >
-          Start Training Session
+          Commencer la revision
         </button>
       </section>
     </div>
   );
 };
-
-

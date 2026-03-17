@@ -23,7 +23,7 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
   const [answersCount, setAnswersCount] = useState(0);
 
   const helperText = useMemo(() => {
-    return "Infinite training session with single-word and verb prompts from completed modules.";
+    return "Session de revision infinie avec des mots et des verbes issus des modules termines.";
   }, []);
 
   const handleSubmit = (answer: string) => {
@@ -39,7 +39,7 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
         ? { type: "correct", message: "Correct" }
         : {
             type: "incorrect",
-            message: `Incorrect. Correct answer: ${result.correctAnswer}`,
+            message: `Incorrect. Bonne reponse : ${result.correctAnswer}`,
           },
     );
     setPendingNextWord(getRandomWord(words));
@@ -58,11 +58,11 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
     <div className="page-shell">
       <header className="page-header">
         <div>
-          <p className="page-kicker">Training Session</p>
-          <h1>Revision Loop</h1>
+          <p className="page-kicker">Session de revision</p>
+          <h1>Boucle de revision</h1>
         </div>
         <button className="secondary-button" onClick={onExit} type="button">
-          Exit
+          Quitter
         </button>
       </header>
 
@@ -74,10 +74,9 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
         onContinue={handleContinue}
         onNextExposure={() => undefined}
         onSubmit={handleSubmit}
-        progressLabel={`Answers given: ${answersCount}`}
+        progressLabel={`Reponses donnees : ${answersCount}`}
         word={currentWord}
       />
     </div>
   );
 };
-

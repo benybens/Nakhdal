@@ -55,7 +55,7 @@ export const WordTrainer = ({
         <>
           <p className="trainer-translation">{word.fr}</p>
           <button className="primary-button" onClick={onNextExposure} type="button">
-            Next
+            Suivant
           </button>
         </>
       ) : (
@@ -66,16 +66,16 @@ export const WordTrainer = ({
             className="trainer-input"
             disabled={isAnswered}
             onChange={(event) => setAnswer(event.target.value)}
-            placeholder="Type the French translation"
+            placeholder="Tape la traduction en francais"
             value={answer}
           />
           {isAnswered ? (
             <button className="primary-button" onClick={onContinue} type="button">
-              Next
+              Suivant
             </button>
           ) : (
             <button className="primary-button" type="submit">
-              Submit
+              Valider
             </button>
           )}
         </form>
