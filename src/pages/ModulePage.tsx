@@ -3,6 +3,7 @@ import { WordTrainer } from "../components/WordTrainer";
 import {
   getModuleMasteredCount,
   getNextWord,
+  getQuestionOptions,
   isModuleCompleted,
   markExposureComplete,
   submitAnswer,
@@ -54,6 +55,14 @@ export const ModulePage = ({
     setCurrentWordState(getNextWord(module, progress));
     setDebugEvents([]);
   }, [module.id]);
+
+  const questionOptions = useMemo(() => {
+    if (!currentWordState || currentWordState.attemptType !== "question") {
+      return [];
+    }
+
+    return getQuestionOptions(currentWordState.word, module.words);
+  }, [currentWordState, module.words]);
 
   const masteredCount = getModuleMasteredCount(module, sessionProgress);
   const completed = isModuleCompleted(module, sessionProgress);
@@ -127,7 +136,7 @@ export const ModulePage = ({
   const helperText =
     currentWordState.attemptType === "exposure"
       ? "Premiere exposition : lis la traduction, puis continue."
-      : "Traduis le mot ou le verbe algerien en francais.";
+      : "Choisis la bonne traduction parmi quatre cartes.";
 
   const handleExposureNext = () => {
     const currentProgress = getWordProgress(sessionProgress, module.id, currentWordState.word);
@@ -213,6 +222,7 @@ export const ModulePage = ({
           onContinue={handleContinue}
           onNextExposure={handleExposureNext}
           onSubmit={handleSubmit}
+          options={questionOptions}
           progressLabel={progressLabel}
           word={currentWordState.word}
         />

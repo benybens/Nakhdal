@@ -86,6 +86,16 @@ const shuffle = <T,>(items: T[]) => {
   return copy;
 };
 
+const scoreCandidate = (expectedAnswer: string, candidateAnswer: string) => {
+  const expected = normalizeAnswer(expectedAnswer);
+  const candidate = normalizeAnswer(candidateAnswer);
+
+  const distance = getEditDistance(expected, candidate);
+  const lengthDelta = Math.abs(expected.length - candidate.length);
+
+  return distance + lengthDelta * 0.25;
+};
+
 export const getNextWord = (
   module: VocabularyModule,
   progress: UserProgress,
@@ -130,6 +140,45 @@ export const submitAnswer = (
       mastered: nextSuccessCount >= 2,
     },
   };
+};
+
+export const getQuestionOptions = (
+  word: VocabularyWord,
+  pool: VocabularyWord[],
+  totalOptions = 4,
+): string[] => {
+  const correctAnswer = word.fr;
+  const correctVariants = new Set(getAnswerVariants(correctAnswer));
+
+  const distractors = pool
+    .filter((candidate) => candidate.dz !== word.dz)
+    .filter((candidate) => {
+      const candidateVariants = getAnswerVariants(candidate.fr);
+      return !candidateVariants.some((variant) => correctVariants.has(variant));
+    })
+    .sort((left, right) => (
+      scoreCandidate(correctAnswer, left.fr) - scoreCandidate(correctAnswer, right.fr)
+    ));
+
+  const uniqueDistractors: string[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of distractors) {
+    const key = normalizeAnswer(candidate.fr);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    uniqueDistractors.push(candidate.fr);
+
+    if (uniqueDistractors.length === totalOptions - 1) {
+      break;
+    }
+  }
+
+  return shuffle([correctAnswer, ...uniqueDistractors]);
 };
 
 export const markExposureComplete = (currentProgress: WordProgress): WordProgress => ({

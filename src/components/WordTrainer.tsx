@@ -1,4 +1,3 @@
-import { FormEvent, useEffect, useState } from "react";
 import { VocabularyWord } from "../types";
 
 type FeedbackState =
@@ -19,6 +18,7 @@ type WordTrainerProps = {
   helperText?: string;
   feedback: FeedbackState;
   isAnswered?: boolean;
+  options?: string[];
   onSubmit: (answer: string) => void;
   onNextExposure: () => void;
   onContinue?: () => void;
@@ -31,21 +31,11 @@ export const WordTrainer = ({
   helperText,
   feedback,
   isAnswered = false,
+  options = [],
   onSubmit,
   onNextExposure,
   onContinue,
 }: WordTrainerProps) => {
-  const [answer, setAnswer] = useState("");
-
-  useEffect(() => {
-    setAnswer("");
-  }, [word.dz, mode, isAnswered]);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    onSubmit(answer);
-  };
-
   return (
     <section className="trainer-card">
       <p className="eyebrow">{progressLabel}</p>
@@ -59,27 +49,35 @@ export const WordTrainer = ({
           </button>
         </>
       ) : (
-        <form className="trainer-form" onSubmit={handleSubmit}>
-          <input
-            autoComplete="off"
-            autoFocus
-            className="trainer-input"
-            disabled={isAnswered}
-            onChange={(event) => setAnswer(event.target.value)}
-            placeholder="Tape la traduction en francais"
-            value={answer}
-          />
-          {isAnswered ? (
-            <button className="primary-button" onClick={onContinue} type="button">
-              Suivant
-            </button>
-          ) : (
-            <button className="primary-button" type="submit">
-              Valider
-            </button>
-          )}
-        </form>
+        <div className="choice-grid">
+          {options.map((option) => {
+            const isCorrectOption = option === word.fr;
+            const stateClass = !isAnswered
+              ? ""
+              : isCorrectOption
+                ? "choice-card--correct"
+                : "choice-card--disabled";
+
+            return (
+              <button
+                key={option}
+                className={`choice-card ${stateClass}`.trim()}
+                disabled={isAnswered}
+                onClick={() => onSubmit(option)}
+                type="button"
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
       )}
+
+      {mode === "question" && isAnswered ? (
+        <button className="primary-button trainer-next-button" onClick={onContinue} type="button">
+          Suivant
+        </button>
+      ) : null}
 
       {helperText ? <p className="helper-text">{helperText}</p> : null}
 

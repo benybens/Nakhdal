@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { WordTrainer } from "./WordTrainer";
-import { submitAnswer } from "../logic/trainingEngine";
+import { getQuestionOptions, submitAnswer } from "../logic/trainingEngine";
 import { VocabularyWord } from "../types";
 
 type TrainingSessionProps = {
@@ -25,6 +25,8 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
   const helperText = useMemo(() => {
     return "Session de revision infinie avec des mots et des verbes issus des modules termines.";
   }, []);
+
+  const questionOptions = useMemo(() => getQuestionOptions(currentWord, words), [currentWord, words]);
 
   const handleSubmit = (answer: string) => {
     const result = submitAnswer(currentWord, answer, {
@@ -68,12 +70,13 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
 
       <WordTrainer
         feedback={feedback}
-        helperText={helperText}
+        helperText="Choisis la bonne traduction parmi quatre cartes."
         isAnswered={pendingNextWord !== null}
         mode="question"
         onContinue={handleContinue}
         onNextExposure={() => undefined}
         onSubmit={handleSubmit}
+        options={questionOptions}
         progressLabel={`Reponses donnees : ${answersCount}`}
         word={currentWord}
       />
