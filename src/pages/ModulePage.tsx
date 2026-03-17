@@ -127,7 +127,7 @@ export const ModulePage = ({
   const helperText =
     currentWordState.attemptType === "exposure"
       ? "First exposure: read the translation, then continue."
-      : "Translate the Algerian word into French.";
+      : "Translate the Algerian word or verb into French.";
 
   const handleExposureNext = () => {
     const currentProgress = getWordProgress(sessionProgress, module.id, currentWordState.word);
@@ -235,3 +235,4 @@ export const ModulePage = ({
     </div>
   );
 };
+

@@ -63,7 +63,7 @@ export const Home = ({
     <div className="page-shell">
       <header className="hero">
         <p className="page-kicker">Nahdar</p>
-        <h1>Algerian to French vocabulary trainer</h1>
+        <h1>Algerian to French word trainer</h1>
         <p className="hero-copy">
           Learn module by module, master each word twice, then keep reviewing in an
           endless training session.
@@ -73,7 +73,7 @@ export const Home = ({
       <section className="panel">
         <div className="section-heading">
           <h2>Lessons</h2>
-          <span className="section-note">Open a lesson to reveal its sub-modules.</span>
+          <span className="section-note">Open a lesson to reveal its word-focused sub-modules.</span>
         </div>
 
         <div className="lesson-list">
@@ -144,4 +144,5 @@ export const Home = ({
     </div>
   );
 };
+
 

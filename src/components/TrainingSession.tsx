@@ -23,7 +23,7 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
   const [answersCount, setAnswersCount] = useState(0);
 
   const helperText = useMemo(() => {
-    return "Infinite training session with words from completed modules.";
+    return "Infinite training session with single-word and verb prompts from completed modules.";
   }, []);
 
   const handleSubmit = (answer: string) => {
@@ -80,3 +80,4 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
     </div>
   );
 };
+
