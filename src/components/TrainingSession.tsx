@@ -27,7 +27,7 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
   const [countdownProgress, setCountdownProgress] = useState(0);
 
   const helperText = useMemo(() => {
-    return "Session de révision infinie avec des mots et des verbes issus des modules terminés.";
+    return "Session de rÃ©vision infinie avec des mots et des verbes issus des modules terminÃ©s.";
   }, []);
 
   const questionOptions = useMemo(() => getQuestionOptions(currentWord, words), [currentWord, words]);
@@ -70,10 +70,10 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
     setAnswersCount((value) => value + 1);
     setFeedback(
       result.isCorrect
-        ? { type: "correct", message: "Oui, c'est ça" }
+        ? { type: "correct", message: "Oui, c'est Ã§a" }
         : {
             type: "incorrect",
-            message: `Pas cette fois. La bonne réponse, c'était : ${result.correctAnswer}`,
+            message: `Pas cette fois. La bonne rÃ©ponse, c'Ã©tait : ${result.correctAnswer}`,
           },
     );
     setPendingNextWord(getRandomWord(words));
@@ -94,8 +94,8 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
     <div className="page-shell">
       <header className="page-header">
         <div>
-          <p className="page-kicker">Session de révision</p>
-          <h1>Boucle de révision</h1>
+          <p className="page-kicker">Session de rÃ©vision</p>
+          <h1>Boucle de rÃ©vision</h1>
         </div>
         <button className="secondary-button" onClick={onExit} type="button">
           Quitter
@@ -112,7 +112,7 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
         onNextExposure={() => undefined}
         onSubmit={handleSubmit}
         options={questionOptions}
-        progressLabel={`Réponses données : ${answersCount}`}
+        progressLabel={`RÃ©ponses donnÃ©es : ${answersCount}`}
         word={currentWord}
       />
     </div>

@@ -115,18 +115,18 @@ const ModulePage = ({
       <div className="page-shell">
         <header className="page-header">
           <div>
-            <p className="page-kicker">DÈj‡ vu</p>
+            <p className="page-kicker">D√©j√† vu</p>
             <h1>{module.title}</h1>
           </div>
           <button className="secondary-button" onClick={onBack} type="button">
-            Retour ‡ l'accueil
+            Retour √† l'accueil
           </button>
         </header>
 
         <section className="trainer-card">
-          <h2>Tu connais Áa</h2>
+          <h2>Tu connais √ßa</h2>
           <p className="helper-text">
-            Bien jouÈ. Tu viens d'ajouter un nouveau bout d'algÈrien ‡ ton oreille.
+            Bien jou√©. Tu viens d'ajouter un nouveau bout d'alg√©rien √† ton oreille.
           </p>
         </section>
       </div>
@@ -171,10 +171,10 @@ const ModulePage = ({
 
     setFeedback(
       result.isCorrect
-        ? { type: "correct", message: "Oui, c'est Áa" }
+        ? { type: "correct", message: "Oui, c'est √ßa" }
         : {
             type: "incorrect",
-            message: `Pas cette fois. La bonne rÈponse, c'Ètait : ${result.correctAnswer}`,
+            message: `Pas cette fois. La bonne r√©ponse, c'√©tait : ${result.correctAnswer}`,
           },
     );
     setPendingAdvance(true);
@@ -205,7 +205,7 @@ const ModulePage = ({
           <h1>{module.title}</h1>
         </div>
         <button className="secondary-button" onClick={onBack} type="button">
-          Retour ‡ l'accueil
+          Retour √† l'accueil
         </button>
       </header>
 

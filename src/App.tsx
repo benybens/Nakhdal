@@ -119,8 +119,8 @@ function App() {
     <>
       <div className="settings-anchor">
         <button className="settings-button" onClick={() => setSettingsOpen(true)} type="button">
-          <span className="settings-button__icon" aria-hidden="true">?</span>
-          <span>Paramètres</span>
+          <span className="settings-button__icon" aria-hidden="true">âš™</span>
+          <span>ParamÃ¨tres</span>
         </button>
       </div>
 
@@ -136,8 +136,8 @@ function App() {
           >
             <div className="settings-modal__header">
               <div>
-                <p className="page-kicker">Paramètres</p>
-                <h2 id="settings-title">Un petit réglage</h2>
+                <p className="page-kicker">ParamÃ¨tres</p>
+                <h2 id="settings-title">Un petit rÃ©glage</h2>
               </div>
               <button className="secondary-button" onClick={() => setSettingsOpen(false)} type="button">
                 Fermer
@@ -146,7 +146,7 @@ function App() {
 
             <div className="settings-option">
               <div>
-                <h3>Thème</h3>
+                <h3>ThÃ¨me</h3>
                 <p>Choisis l'ambiance qui te va le mieux.</p>
               </div>
               <div className="theme-switcher">
