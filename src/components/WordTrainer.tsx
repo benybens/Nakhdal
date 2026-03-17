@@ -19,6 +19,7 @@ type WordTrainerProps = {
   feedback: FeedbackState;
   isAnswered?: boolean;
   options?: string[];
+  countdownProgress?: number;
   onSubmit: (answer: string) => void;
   onNextExposure: () => void;
   onContinue?: () => void;
@@ -32,6 +33,7 @@ export const WordTrainer = ({
   feedback,
   isAnswered = false,
   options = [],
+  countdownProgress = 0,
   onSubmit,
   onNextExposure,
   onContinue,
@@ -74,9 +76,14 @@ export const WordTrainer = ({
       )}
 
       {mode === "question" && isAnswered ? (
-        <button className="primary-button trainer-next-button" onClick={onContinue} type="button">
-          Suivant
-        </button>
+        <div className="countdown-block">
+          <div className="countdown-bar" aria-hidden="true">
+            <div className="countdown-bar__fill" style={{ width: `${Math.max(0, Math.min(1, countdownProgress)) * 100}%` }} />
+          </div>
+          <button className="primary-button trainer-next-button" onClick={onContinue} type="button">
+            Passer tout de suite
+          </button>
+        </div>
       ) : null}
 
       {helperText ? <p className="helper-text">{helperText}</p> : null}

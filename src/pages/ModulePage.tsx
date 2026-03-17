@@ -23,7 +23,8 @@ type ModulePageProps = {
   onProgressChange: (nextProgress: UserProgress) => void;
 };
 
-const AUTO_ADVANCE_MS = 900;
+const AUTO_ADVANCE_MS = 5000;
+const COUNTDOWN_TICK_MS = 50;
 
 const ModulePage = ({
   module,
@@ -38,6 +39,7 @@ const ModulePage = ({
   } | null>(null);
   const [pendingAdvance, setPendingAdvance] = useState(false);
   const [pendingProgress, setPendingProgress] = useState<UserProgress | null>(null);
+  const [countdownProgress, setCountdownProgress] = useState(0);
   const [currentWordState, setCurrentWordState] = useState<TrainerWordState | null>(() =>
     getNextWord(module, progress),
   );
@@ -47,6 +49,7 @@ const ModulePage = ({
     setFeedback(null);
     setPendingAdvance(false);
     setPendingProgress(null);
+    setCountdownProgress(0);
     setCurrentWordState(getNextWord(module, progress));
   }, [module.id, progress]);
 
@@ -63,8 +66,18 @@ const ModulePage = ({
 
   useEffect(() => {
     if (!pendingAdvance || !pendingProgress) {
+      setCountdownProgress(0);
       return;
     }
+
+    const startedAt = Date.now();
+    setCountdownProgress(1);
+
+    const progressTimer = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const remainingRatio = Math.max(0, 1 - elapsed / AUTO_ADVANCE_MS);
+      setCountdownProgress(remainingRatio);
+    }, COUNTDOWN_TICK_MS);
 
     const timerId = window.setTimeout(() => {
       const nextWord = getNextWord(module, pendingProgress);
@@ -74,9 +87,13 @@ const ModulePage = ({
       setCurrentWordState(nextWord);
       onProgressChange(pendingProgress);
       setPendingProgress(null);
+      setCountdownProgress(0);
     }, AUTO_ADVANCE_MS);
 
-    return () => window.clearTimeout(timerId);
+    return () => {
+      window.clearInterval(progressTimer);
+      window.clearTimeout(timerId);
+    };
   }, [module, onProgressChange, pendingAdvance, pendingProgress]);
 
   useEffect(() => {
@@ -133,6 +150,7 @@ const ModulePage = ({
     setFeedback(null);
     setPendingAdvance(false);
     setPendingProgress(null);
+    setCountdownProgress(0);
     setSessionProgress(nextProgress);
     setCurrentWordState(getNextWord(module, nextProgress));
     onProgressChange(nextProgress);
@@ -161,6 +179,7 @@ const ModulePage = ({
     );
     setPendingAdvance(true);
     setPendingProgress(nextProgress);
+    setCountdownProgress(1);
   };
 
   const handleContinue = () => {
@@ -175,6 +194,7 @@ const ModulePage = ({
     setCurrentWordState(nextWord);
     onProgressChange(pendingProgress);
     setPendingProgress(null);
+    setCountdownProgress(0);
   };
 
   return (
@@ -191,6 +211,7 @@ const ModulePage = ({
 
       <WordTrainer
         key={`${currentWordState.word.dz}-${currentWordState.attemptType}-${pendingAdvance ? "locked" : "open"}`}
+        countdownProgress={countdownProgress}
         feedback={feedback}
         helperText={helperText}
         isAnswered={pendingAdvance}

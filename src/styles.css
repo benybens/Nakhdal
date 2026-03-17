@@ -24,6 +24,24 @@
   font-weight: 400;
 }
 
+:root[data-theme="dark"] {
+  --bg-cream: #08130d;
+  --bg-mist: #102019;
+  --surface: rgba(14, 27, 20, 0.78);
+  --surface-strong: rgba(18, 34, 26, 0.92);
+  --surface-soft: rgba(19, 39, 29, 0.86);
+  --line: rgba(157, 210, 179, 0.12);
+  --line-strong: rgba(157, 210, 179, 0.24);
+  --text-main: #eef8f1;
+  --text-soft: #a3b8ac;
+  --green: #8fceb0;
+  --green-soft: #68a585;
+  --green-pale: rgba(74, 122, 96, 0.35);
+  --red: #f26b89;
+  --red-soft: #c76f83;
+  --red-pale: rgba(210, 16, 52, 0.18);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -38,6 +56,13 @@ body {
     linear-gradient(180deg, #fbfdf8 0%, #eef5ef 100%);
 }
 
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(0, 102, 51, 0.28), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(210, 16, 52, 0.18), transparent 16%),
+    linear-gradient(180deg, #06100b 0%, #0d1b14 100%);
+}
+
 button,
 input {
   font: inherit;
@@ -50,7 +75,114 @@ input {
 .page-shell {
   width: min(1200px, calc(100% - 2rem));
   margin: 0 auto;
-  padding: 3rem 0 4rem;
+  padding: 4.5rem 0 4rem;
+}
+
+.settings-anchor {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 30;
+}
+
+.settings-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(16px);
+  color: var(--text-main);
+  font-weight: 700;
+  box-shadow: 0 14px 28px rgba(29, 58, 43, 0.08);
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .settings-button {
+  background: rgba(17, 31, 24, 0.86);
+}
+
+.settings-button__icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 19, 13, 0.32);
+  backdrop-filter: blur(8px);
+}
+
+.settings-modal {
+  width: min(480px, 100%);
+  padding: 1.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  box-shadow: 0 24px 60px rgba(9, 20, 14, 0.18);
+}
+
+.settings-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.settings-modal__header h2,
+.settings-option h3 {
+  margin: 0.25rem 0 0;
+}
+
+.settings-option {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-option p {
+  margin: 0.35rem 0 0;
+  color: var(--text-soft);
+}
+
+.theme-switcher {
+  display: inline-flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.theme-chip {
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff, #f1f6f2);
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .theme-chip {
+  background: linear-gradient(180deg, rgba(29, 49, 38, 0.95), rgba(22, 37, 29, 0.95));
+}
+
+.theme-chip--active {
+  background: linear-gradient(135deg, var(--green) 0%, #0e7b44 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 102, 51, 0.2);
 }
 
 .hero,
@@ -78,6 +210,12 @@ input {
   margin-bottom: 1.5rem;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(240, 248, 242, 0.86)),
+    var(--surface);
+}
+
+:root[data-theme="dark"] .hero {
+  background:
+    linear-gradient(135deg, rgba(24, 42, 32, 0.96), rgba(16, 31, 24, 0.92)),
     var(--surface);
 }
 
@@ -137,6 +275,10 @@ input {
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(241, 248, 243, 0.78));
   padding: 0.75rem;
+}
+
+:root[data-theme="dark"] .lesson-group {
+  background: linear-gradient(180deg, rgba(24, 40, 31, 0.82), rgba(19, 34, 26, 0.92));
 }
 
 .lesson-toggle {
@@ -225,6 +367,10 @@ input {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 249, 245, 0.82));
 }
 
+:root[data-theme="dark"] .page-header {
+  background: linear-gradient(180deg, rgba(24, 41, 31, 0.94), rgba(17, 32, 24, 0.9));
+}
+
 .training-layout {
   display: grid;
   gap: 1.5rem;
@@ -240,6 +386,12 @@ input {
   background:
     radial-gradient(circle at top, rgba(0, 102, 51, 0.06), transparent 42%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 250, 246, 0.92));
+}
+
+:root[data-theme="dark"] .trainer-card {
+  background:
+    radial-gradient(circle at top, rgba(111, 194, 146, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(21, 38, 29, 0.98), rgba(16, 29, 23, 0.94));
 }
 
 .trainer-word {
@@ -278,11 +430,19 @@ input {
     background 140ms ease;
 }
 
+:root[data-theme="dark"] .choice-card {
+  background: linear-gradient(180deg, rgba(25, 42, 32, 0.98), rgba(18, 31, 24, 0.98));
+}
+
 .choice-card:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(29, 58, 43, 0.08);
   border-color: var(--green-soft);
   background: linear-gradient(180deg, #ffffff, #eef8f1);
+}
+
+:root[data-theme="dark"] .choice-card:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(32, 54, 41, 0.98), rgba(22, 39, 30, 0.98));
 }
 
 .choice-card:disabled {
@@ -293,6 +453,10 @@ input {
   background: linear-gradient(180deg, #f7fdf9, #e2f2e8);
   border-color: rgba(0, 102, 51, 0.38);
   color: var(--green);
+}
+
+:root[data-theme="dark"] .choice-card--correct {
+  background: linear-gradient(180deg, rgba(29, 70, 47, 0.95), rgba(23, 56, 38, 0.95));
 }
 
 .choice-card--disabled {
@@ -338,6 +502,10 @@ input {
   border: 1px solid var(--line);
 }
 
+:root[data-theme="dark"] .secondary-button {
+  background: linear-gradient(180deg, rgba(25, 42, 32, 0.98), rgba(18, 30, 24, 0.98));
+}
+
 .feedback {
   margin-top: 1rem;
   font-weight: 700;
@@ -379,13 +547,23 @@ input {
 @media (max-width: 720px) {
   .page-shell {
     width: min(100% - 1.25rem, 1200px);
-    padding-top: 1.5rem;
+    padding-top: 5rem;
+  }
+
+  .settings-anchor {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .settings-button {
+    padding: 0.75rem 0.9rem;
   }
 
   .panel--compact,
   .section-heading,
   .page-header,
-  .module-card {
+  .module-card,
+  .settings-modal__header {
     flex-direction: column;
     align-items: flex-start;
   }

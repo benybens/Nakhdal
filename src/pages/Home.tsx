@@ -63,16 +63,16 @@ export const Home = ({
     <div className="page-shell">
       <header className="hero">
         <p className="page-kicker">Nahdar</p>
-        <h1>Tu commences Ã  parler algÃ©rien sans t'en rendre compte</h1>
+        <h1>Tu commences à parler algérien sans t'en rendre compte</h1>
         <p className="hero-copy">
-          Des mots du quotidien, thÃ¨me par thÃ¨me, puis une rÃ©vision qui tourne sans fin.
+          Des mots du quotidien, thème par thème, puis une révision qui tourne sans fin.
         </p>
       </header>
 
       <section className="panel">
         <div className="section-heading">
-          <h2>Par oÃ¹ on commence ?</h2>
-          <span className="section-note">Choisis un thÃ¨me et laisse les mots venir tranquilles.</span>
+          <h2>Par où on commence ?</h2>
+          <span className="section-note">Choisis un thème et laisse les mots venir tranquilles.</span>
         </div>
 
         <div className="lesson-list">
@@ -82,11 +82,11 @@ export const Home = ({
               isModuleCompleted(module, progress),
             ).length;
 
-            let lessonProgress = "Pas encore explorÃ©";
+            let lessonProgress = "Pas encore exploré";
             if (completedModules > 0 && completedModules < lesson.modules.length) {
-              lessonProgress = `Tu as dÃ©jÃ  ouvert ${completedModules} module${completedModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
+              lessonProgress = `Tu as déjà ouvert ${completedModules} module${completedModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
             } else if (completedModules === lesson.modules.length) {
-              lessonProgress = "DÃ©jÃ  vu, tu connais Ã§a";
+              lessonProgress = "Déjà vu, tu connais ça";
             }
 
             return (
@@ -112,10 +112,10 @@ export const Home = ({
                       const masteredCount = getModuleMasteredCount(module, progress);
                       const completed = isModuleCompleted(module, progress);
                       const progressLabel = completed
-                        ? "Tu connais Ã§a"
+                        ? "Tu connais ça"
                         : masteredCount > 0
                           ? `Encore ${module.words.length - masteredCount} mot${module.words.length - masteredCount > 1 ? "s" : ""}`
-                          : "Pas encore explorÃ©";
+                          : "Pas encore exploré";
 
                       return (
                         <ModuleCard
@@ -136,11 +136,11 @@ export const Home = ({
 
       <section className="panel panel--compact">
         <div className="section-heading">
-          <h2>Le coin rÃ©vision</h2>
+          <h2>Le coin révision</h2>
           <span className="section-note">
             {canStartTraining
               ? "Encore un tour ?"
-              : "Encore quelques mots et tu dÃ©bloques la rÃ©vision."}
+              : "Encore quelques mots et tu débloques la révision."}
           </span>
         </div>
         <button

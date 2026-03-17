@@ -11,6 +11,10 @@ type Route =
   | { name: "module"; moduleId: string }
   | { name: "training" };
 
+type Theme = "light" | "dark";
+
+const THEME_STORAGE_KEY = "nahdar_theme";
+
 const parseRoute = (): Route => {
   const hash = window.location.hash.replace("#", "");
 
@@ -42,9 +46,24 @@ const navigateTo = (route: Route) => {
   window.location.hash = `/modules/${route.moduleId}`;
 };
 
+const loadTheme = (): Theme => {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (savedTheme === "dark" || savedTheme === "light") {
+    return savedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+
 function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute());
   const [progress, setProgress] = useState<UserProgress>(() => loadProgress());
+  const [theme, setTheme] = useState<Theme>(() => loadTheme());
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseRoute());
@@ -56,6 +75,11 @@ function App() {
     saveProgress(progress);
   }, [progress]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
   const selectedModule = useMemo(() => {
     if (route.name !== "module") {
       return null;
@@ -66,8 +90,10 @@ function App() {
 
   const trainingWords = progress.revisionWords;
 
+  let content;
+
   if (route.name === "module" && selectedModule) {
-    return (
+    content = (
       <ModulePage
         module={selectedModule}
         onBack={() => navigateTo({ name: "home" })}
@@ -75,20 +101,75 @@ function App() {
         progress={progress}
       />
     );
-  }
-
-  if (route.name === "training" && trainingWords.length > 0) {
-    return <TrainingPage onBack={() => navigateTo({ name: "home" })} words={trainingWords} />;
+  } else if (route.name === "training" && trainingWords.length > 0) {
+    content = <TrainingPage onBack={() => navigateTo({ name: "home" })} words={trainingWords} />;
+  } else {
+    content = (
+      <Home
+        canStartTraining={trainingWords.length > 0}
+        modules={modules}
+        onOpenModule={(moduleId) => navigateTo({ name: "module", moduleId })}
+        onOpenTraining={() => navigateTo({ name: "training" })}
+        progress={progress}
+      />
+    );
   }
 
   return (
-    <Home
-      canStartTraining={trainingWords.length > 0}
-      modules={modules}
-      onOpenModule={(moduleId) => navigateTo({ name: "module", moduleId })}
-      onOpenTraining={() => navigateTo({ name: "training" })}
-      progress={progress}
-    />
+    <>
+      <div className="settings-anchor">
+        <button className="settings-button" onClick={() => setSettingsOpen(true)} type="button">
+          <span className="settings-button__icon" aria-hidden="true">?</span>
+          <span>Paramètres</span>
+        </button>
+      </div>
+
+      {content}
+
+      {settingsOpen ? (
+        <div className="settings-modal-backdrop" onClick={() => setSettingsOpen(false)} role="presentation">
+          <section
+            aria-labelledby="settings-title"
+            className="settings-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="settings-modal__header">
+              <div>
+                <p className="page-kicker">Paramètres</p>
+                <h2 id="settings-title">Un petit réglage</h2>
+              </div>
+              <button className="secondary-button" onClick={() => setSettingsOpen(false)} type="button">
+                Fermer
+              </button>
+            </div>
+
+            <div className="settings-option">
+              <div>
+                <h3>Thème</h3>
+                <p>Choisis l'ambiance qui te va le mieux.</p>
+              </div>
+              <div className="theme-switcher">
+                <button
+                  className={`theme-chip ${theme === "light" ? "theme-chip--active" : ""}`}
+                  onClick={() => setTheme("light")}
+                  type="button"
+                >
+                  Clair
+                </button>
+                <button
+                  className={`theme-chip ${theme === "dark" ? "theme-chip--active" : ""}`}
+                  onClick={() => setTheme("dark")}
+                  type="button"
+                >
+                  Sombre
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
   );
 }
 
