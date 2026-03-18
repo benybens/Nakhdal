@@ -39,7 +39,7 @@ type DisplayedQuestion = {
   translationLabel?: string;
 };
 
-const QUESTION_TRANSITION_MS = 500;
+const QUESTION_TRANSITION_MS = 250;
 
 export const WordTrainer = ({
   mode,
@@ -119,8 +119,8 @@ export const WordTrainer = ({
   const renderedTranslationLabel = displayedQuestion.translationLabel;
 
   return (
-    <section className="trainer-card">
-      <div className={`trainer-card__content trainer-card__content--${transitionPhase}`}>
+    <section className={`trainer-card trainer-card--${transitionPhase}`}>
+      <div className="trainer-card__content">
         <p className="eyebrow">{renderedProgressLabel}</p>
         <h2 className="trainer-word">{renderedWord.dz}</h2>
 

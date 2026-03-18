@@ -4,7 +4,6 @@ import failSoundUrl from "../audio/UI/fail_sound.wav";
 let correctAudio: HTMLAudioElement | null = null;
 let incorrectAudio: HTMLAudioElement | null = null;
 let uiFeedbackVolume = 0.8;
-const activePlayers = new Set<HTMLAudioElement>();
 
 const createAudio = (src: string) => {
   if (typeof window === "undefined") {
@@ -39,27 +38,12 @@ const playAudio = (audio: HTMLAudioElement | null) => {
     return;
   }
 
-  const player = audio.cloneNode(true);
-  if (!(player instanceof HTMLAudioElement)) {
-    return;
-  }
+  audio.pause();
+  audio.volume = uiFeedbackVolume;
+  audio.currentTime = 0;
 
-  player.preload = "auto";
-  player.volume = uiFeedbackVolume;
-  player.currentTime = 0;
-  activePlayers.add(player);
-
-  const cleanup = () => {
-    activePlayers.delete(player);
-    player.removeEventListener("ended", cleanup);
-    player.removeEventListener("error", cleanup);
-  };
-
-  player.addEventListener("ended", cleanup);
-  player.addEventListener("error", cleanup);
-
-  void player.play().catch(() => {
-    cleanup();
+  void audio.play().catch(() => {
+    // Ignore autoplay/device routing failures; the UI should continue.
   });
 };
 

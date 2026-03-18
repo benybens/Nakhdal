@@ -435,8 +435,10 @@ input {
   width: 100%;
   margin: 0 auto;
   background:
-    radial-gradient(circle at top, rgba(0, 102, 51, 0.06), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 250, 246, 0.92));
+     radial-gradient(circle at top, rgba(0, 102, 51, 0.06), transparent 42%),
+     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 250, 246, 0.92));
+  opacity: 1;
+  transition: opacity 250ms ease;
 }
 
 :root[data-theme="dark"] .trainer-card {
@@ -445,13 +447,7 @@ input {
     linear-gradient(180deg, rgba(21, 38, 29, 0.98), rgba(16, 29, 23, 0.94));
 }
 
-.trainer-card__content {
-  opacity: 1;
-  transition: opacity 500ms ease;
-}
-
-.trainer-card__content--fading-out,
-.trainer-card__content--fading-out {
+.trainer-card--fading-out {
   opacity: 0;
 }
 
