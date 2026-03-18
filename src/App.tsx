@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { modules } from "./data/modules";
 import { Home } from "./pages/Home";
+import { primeFeedbackAudio } from "./logic/feedbackSound";
 import { ModulePage } from "./pages/ModulePage";
 import { TrainingPage } from "./pages/TrainingPage";
 import { loadProgress, saveProgress } from "./store/progressStore";
@@ -92,6 +93,20 @@ function App() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      primeFeedbackAudio();
+    };
+
+    window.addEventListener("pointerdown", unlockAudio, { passive: true });
+    window.addEventListener("keydown", unlockAudio);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
 
   const selectedModule = useMemo(() => {
     if (route.name !== "module" && route.name !== "module-training") {

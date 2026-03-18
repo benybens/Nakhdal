@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ModuleCard } from "../components/ModuleCard";
 import { getModuleMasteredCount, isModuleCompleted } from "../logic/trainingEngine";
+import { getModuleProgress } from "../store/progressStore";
 import { UserProgress, VocabularyModule } from "../types";
 
 type HomeProps = {
@@ -80,10 +81,16 @@ export const Home = ({
             const completedModules = lesson.modules.filter((module) =>
               isModuleCompleted(module, progress),
             ).length;
+            const exploredModules = lesson.modules.filter((module) => {
+              const moduleProgress = getModuleProgress(progress, module);
+              return Object.keys(moduleProgress.wordStats).length > 0;
+            }).length;
 
             let lessonProgress = "Pas encore exploré";
-            if (completedModules > 0 && completedModules < lesson.modules.length) {
-              lessonProgress = `Tu as déjà ouvert ${completedModules} module${completedModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
+            if (completedModules === lesson.modules.length) {
+              lessonProgress = "Tous les modules sont terminés";
+            } else if (exploredModules > 0) {
+              lessonProgress = `Tu as déjà ouvert ${exploredModules} module${exploredModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
             }
 
             return (
@@ -109,13 +116,15 @@ export const Home = ({
                       const knownWords = getModuleMasteredCount(module, progress);
                       const totalWords = module.words.length;
                       const completionPercent = Math.round((knownWords / totalWords) * 100);
-                      const progressLabel = isModuleCompleted(module, progress)
-                        ? ""
+                      const isCompleted = isModuleCompleted(module, progress);
+                      const progressLabel = isCompleted
+                        ? "Terminé"
                         : `${knownWords} / ${totalWords} mots • ${completionPercent}%`;
 
                       return (
                         <ModuleCard
                           key={module.id}
+                          isCompleted={isCompleted}
                           module={module}
                           onOpen={() => onOpenModule(module.id)}
                           progressLabel={progressLabel}

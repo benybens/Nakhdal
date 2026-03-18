@@ -14,6 +14,7 @@ import {
   markModuleCompleted,
   updateWordProgress,
 } from "../store/progressStore";
+import { playAnswerFeedbackSound } from "../logic/feedbackSound";
 import { TrainerWordState, UserProgress, VocabularyModule, VocabularyWord } from "../types";
 
 type ModulePageProps = {
@@ -160,6 +161,38 @@ const ModulePage = ({
     }
   }, [completed, module, moduleProgress.completed, onProgressChange, sessionProgress]);
 
+  useEffect(() => {
+    if (!pendingAdvance || !pendingProgress) {
+      setCountdownProgress(0);
+      return;
+    }
+
+    const startedAt = Date.now();
+    setCountdownProgress(1);
+
+    const progressTimer = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const remainingRatio = Math.max(0, 1 - elapsed / AUTO_ADVANCE_MS);
+      setCountdownProgress(remainingRatio);
+    }, COUNTDOWN_TICK_MS);
+
+    const timerId = window.setTimeout(() => {
+      const nextWord = getNextWord(module, pendingProgress);
+      setFeedback(null);
+      setPendingAdvance(false);
+      setSessionProgress(pendingProgress);
+      setCurrentWordState(nextWord);
+      onProgressChange(pendingProgress);
+      setPendingProgress(null);
+      setCountdownProgress(0);
+    }, AUTO_ADVANCE_MS);
+
+    return () => {
+      window.clearInterval(progressTimer);
+      window.clearTimeout(timerId);
+    };
+  }, [module, onProgressChange, pendingAdvance, pendingProgress]);
+
   const progressLabel = useMemo(() => {
     const currentProgress = pendingProgress ?? sessionProgress;
     const currentMasteredCount = getModuleMasteredCount(module, currentProgress);
@@ -255,6 +288,7 @@ const ModulePage = ({
       result.updatedProgress,
     );
 
+    playAnswerFeedbackSound(result.isCorrect);
     setFeedback(
       result.isCorrect
         ? { type: "correct", message: "Oui, c'est ça" }

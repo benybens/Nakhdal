@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { WordTrainer } from "./WordTrainer";
 import { getQuestionOptions, submitAnswer } from "../logic/trainingEngine";
+import { playAnswerFeedbackSound } from "../logic/feedbackSound";
 import { VocabularyWord } from "../types";
 
 type TrainingSessionProps = {
@@ -70,6 +71,7 @@ export const TrainingSession = ({
       mastered: false,
     });
 
+    playAnswerFeedbackSound(result.isCorrect);
     setAnswersCount((value) => value + 1);
     setFeedback(
       result.isCorrect
