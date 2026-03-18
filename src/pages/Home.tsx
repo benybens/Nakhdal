@@ -84,8 +84,6 @@ export const Home = ({
             let lessonProgress = "Pas encore exploré";
             if (completedModules > 0 && completedModules < lesson.modules.length) {
               lessonProgress = `Tu as déjà ouvert ${completedModules} module${completedModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
-            } else if (completedModules === lesson.modules.length) {
-              lessonProgress = "Déjà vu, tu connais ça";
             }
 
             return (
@@ -108,13 +106,12 @@ export const Home = ({
                 {isExpanded ? (
                   <div className="lesson-submodules">
                     {lesson.modules.map((module) => {
-                      const masteredCount = getModuleMasteredCount(module, progress);
-                      const completed = isModuleCompleted(module, progress);
-                      const progressLabel = completed
-                        ? "Tu connais ça"
-                        : masteredCount > 0
-                          ? `Encore ${module.words.length - masteredCount} mot${module.words.length - masteredCount > 1 ? "s" : ""}`
-                          : "Pas encore exploré";
+                      const knownWords = getModuleMasteredCount(module, progress);
+                      const totalWords = module.words.length;
+                      const completionPercent = Math.round((knownWords / totalWords) * 100);
+                      const progressLabel = isModuleCompleted(module, progress)
+                        ? ""
+                        : `${knownWords} / ${totalWords} mots • ${completionPercent}%`;
 
                       return (
                         <ModuleCard

@@ -20,6 +20,8 @@ type WordTrainerProps = {
   isAnswered?: boolean;
   options?: string[];
   countdownProgress?: number;
+  getOptionLabel?: (option: string) => string;
+  translationLabel?: string;
   onSubmit: (answer: string) => void;
   onNextExposure: () => void;
   onContinue?: () => void;
@@ -34,6 +36,8 @@ export const WordTrainer = ({
   isAnswered = false,
   options = [],
   countdownProgress = 0,
+  getOptionLabel,
+  translationLabel,
   onSubmit,
   onNextExposure,
   onContinue,
@@ -45,9 +49,9 @@ export const WordTrainer = ({
 
       {mode === "exposure" ? (
         <>
-          <p className="trainer-translation">{word.fr}</p>
+          <p className="trainer-translation">{translationLabel ?? word.fr}</p>
           <button className="primary-button" onClick={onNextExposure} type="button">
-            Suivant
+            J'ai compris
           </button>
         </>
       ) : (
@@ -68,7 +72,7 @@ export const WordTrainer = ({
                 onClick={() => onSubmit(option)}
                 type="button"
               >
-                {option}
+                {getOptionLabel ? getOptionLabel(option) : option}
               </button>
             );
           })}

@@ -6,6 +6,8 @@ import { VocabularyWord } from "../types";
 type TrainingSessionProps = {
   words: VocabularyWord[];
   onExit: () => void;
+  title?: string;
+  kicker?: string;
 };
 
 const AUTO_ADVANCE_MS = 5000;
@@ -16,7 +18,12 @@ const getRandomWord = (words: VocabularyWord[]) => {
   return words[randomIndex];
 };
 
-export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
+export const TrainingSession = ({
+  words,
+  onExit,
+  title = "Boucle de révision",
+  kicker = "Session de révision",
+}: TrainingSessionProps) => {
   const [currentWord, setCurrentWord] = useState(() => getRandomWord(words));
   const [pendingNextWord, setPendingNextWord] = useState<VocabularyWord | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -25,10 +32,6 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
   } | null>(null);
   const [answersCount, setAnswersCount] = useState(0);
   const [countdownProgress, setCountdownProgress] = useState(0);
-
-  const helperText = useMemo(() => {
-    return "Session de révision infinie avec des mots et des verbes issus des modules terminés.";
-  }, []);
 
   const questionOptions = useMemo(() => getQuestionOptions(currentWord, words), [currentWord, words]);
 
@@ -94,8 +97,8 @@ export const TrainingSession = ({ words, onExit }: TrainingSessionProps) => {
     <div className="page-shell">
       <header className="page-header">
         <div>
-          <p className="page-kicker">Session de révision</p>
-          <h1>Boucle de révision</h1>
+          <p className="page-kicker">{kicker}</p>
+          <h1>{title}</h1>
         </div>
         <button className="secondary-button" onClick={onExit} type="button">
           Quitter

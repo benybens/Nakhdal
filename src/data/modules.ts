@@ -69,7 +69,7 @@ const createModule = (id: string, title: string, words: string[]): VocabularyMod
 });
 
 const curatedModules: VocabularyModule[] = [
-  createModule("core_pronouns", "Moi, toi, nous", [
+  createModule("core_pronouns_v2", "Moi, toi, nous", [
     "Ana",
     "Nta",
     "Ntia",
@@ -79,7 +79,7 @@ const curatedModules: VocabularyModule[] = [
     "Ntouma",
     "Houma",
   ]),
-  createModule("core_grammar", "Les petits mots qui relient tout", [
+  createModule("core_grammar_v2", "Les petits mots qui relient tout", [
     "Rani",
     "3andi",
     "Khassni",
@@ -89,7 +89,7 @@ const curatedModules: VocabularyModule[] = [
     "Ouw",
     "Bessa7",
   ]),
-  createModule("core_daily_verbs", "Les verbes que tu vas sortir tout le temps", [
+  createModule("core_daily_verbs_v2", "Les verbes que tu vas sortir tout le temps", [
     "N'7ab",
     "N'dir",
     "N'ji",
@@ -101,7 +101,7 @@ const curatedModules: VocabularyModule[] = [
     "Na9ra",
     "Nahdar",
   ]),
-  createModule("core_question_time", "Quand, où, comment", [
+  createModule("core_question_time_v2", "Quand, où, comment", [
     "Wash",
     "Kiffach",
     "Ch7al",
@@ -113,7 +113,7 @@ const curatedModules: VocabularyModule[] = [
     "Hnak",
     "Kayan",
   ]),
-  createModule("people_family", "La famille, les gens, le monde autour", [
+  createModule("people_family_v2", "La famille, les gens, le monde autour", [
     "Khouya",
     "Khti",
     "3aila",
@@ -126,7 +126,7 @@ const curatedModules: VocabularyModule[] = [
     "Bint",
     "Wald",
   ]),
-  createModule("daily_actions", "Les gestes du quotidien", [
+  createModule("daily_actions_v2", "Les gestes du quotidien", [
     "N'chouf",
     "Nasma3",
     "Nachri",
@@ -138,7 +138,7 @@ const curatedModules: VocabularyModule[] = [
     "N'mad",
     "N'sana",
   ]),
-  createModule("daily_places_objects", "La maison, le boulot, les trucs de tous les jours", [
+  createModule("daily_places_objects_v2", "La maison, le boulot, les trucs de tous les jours", [
     "Dar",
     "Khadma",
     "Sou9",
@@ -151,7 +151,7 @@ const curatedModules: VocabularyModule[] = [
     "Bab",
     "Lwa9t",
   ]),
-  createModule("demonstratives_possessives", "À moi, à toi, celui-là", [
+  createModule("demonstratives_possessives_v2", "À moi, à toi, celui-là", [
     "Hada",
     "Hadi",
     "Had",
@@ -164,7 +164,7 @@ const curatedModules: VocabularyModule[] = [
     "Ta3ha",
     "Ta3na",
   ]),
-  createModule("descriptions", "Décrire les choses comme on les voit", [
+  createModule("descriptions_v2", "Décrire les choses comme on les voit", [
     "Mli7",
     "Chaba",
     "Ghaya",
@@ -177,7 +177,7 @@ const curatedModules: VocabularyModule[] = [
     "Mrigle",
     "Wa9ila",
   ]),
-  createModule("social_words", "Les expressions qui font la diff", [
+  createModule("social_words_v2", "Les expressions qui font la diff", [
     "Arwa7",
     "Arwa7i",
     "Arwa7ou",
@@ -189,7 +189,7 @@ const curatedModules: VocabularyModule[] = [
     "Hakou",
     "Bssa7tek",
   ]),
-  createModule("nature_world", "Le ciel, la rue, la terre", [
+  createModule("nature_world_v2", "Le ciel, la rue, la terre", [
     "Tabi3a",
     "Chams",
     "Lb7ar",
@@ -201,7 +201,7 @@ const curatedModules: VocabularyModule[] = [
     "Lahwa",
     "Trab",
   ]),
-  createModule("extended_verbs", "Encore plus de mots pour aller plus loin", [
+  createModule("extended_verbs_v2", "Encore plus de mots pour aller plus loin", [
     "N'7al",
     "N'7at",
     "N'khali",
@@ -237,4 +237,3 @@ const splitModule = (module: VocabularyModule): VocabularyModule[] => {
 };
 
 export const modules: VocabularyModule[] = curatedModules.flatMap(splitModule);
-

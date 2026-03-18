@@ -9,6 +9,7 @@ import { UserProgress } from "./types";
 type Route =
   | { name: "home" }
   | { name: "module"; moduleId: string }
+  | { name: "module-training"; moduleId: string }
   | { name: "training" };
 
 type Theme = "light" | "dark";
@@ -17,6 +18,13 @@ const THEME_STORAGE_KEY = "nahdar_theme";
 
 const parseRoute = (): Route => {
   const hash = window.location.hash.replace("#", "");
+
+  if (hash.startsWith("/module-training/")) {
+    return {
+      name: "module-training",
+      moduleId: hash.replace("/module-training/", ""),
+    };
+  }
 
   if (hash.startsWith("/modules/")) {
     return {
@@ -40,6 +48,11 @@ const navigateTo = (route: Route) => {
 
   if (route.name === "training") {
     window.location.hash = "/training";
+    return;
+  }
+
+  if (route.name === "module-training") {
+    window.location.hash = `/module-training/${route.moduleId}`;
     return;
   }
 
@@ -81,13 +94,40 @@ function App() {
   }, [theme]);
 
   const selectedModule = useMemo(() => {
-    if (route.name !== "module") {
+    if (route.name !== "module" && route.name !== "module-training") {
       return null;
     }
 
     return modules.find((module) => module.id === route.moduleId) ?? null;
   }, [route]);
 
+  useEffect(() => {
+    if (route.name !== "module") {
+      return;
+    }
+
+    console.log("[Nahdar][App] Opening module route", {
+      route,
+      selectedModuleId: selectedModule?.id ?? null,
+      selectedModuleTitle: selectedModule?.title ?? null,
+      selectedModuleWordCount: selectedModule?.words.length ?? 0,
+      selectedModuleWords:
+        selectedModule?.words.map((word) => ({
+          dz: word.dz,
+          fr: word.fr,
+        })) ?? [],
+    });
+  }, [route, selectedModule]);
+
+  const selectedModuleIndex = useMemo(() => {
+    if (!selectedModule) {
+      return -1;
+    }
+
+    return modules.findIndex((module) => module.id === selectedModule.id);
+  }, [selectedModule]);
+
+  const nextModule = selectedModuleIndex >= 0 ? modules[selectedModuleIndex + 1] ?? null : null;
   const trainingWords = progress.revisionWords;
 
   let content;
@@ -96,9 +136,21 @@ function App() {
     content = (
       <ModulePage
         module={selectedModule}
+        nextModule={nextModule}
         onBack={() => navigateTo({ name: "home" })}
+        onGoToModuleTraining={() => navigateTo({ name: "module-training", moduleId: selectedModule.id })}
+        onGoToNextModule={nextModule ? () => navigateTo({ name: "module", moduleId: nextModule.id }) : undefined}
         onProgressChange={setProgress}
         progress={progress}
+      />
+    );
+  } else if (route.name === "module-training" && selectedModule) {
+    content = (
+      <TrainingPage
+        kicker="Révision du module"
+        onBack={() => navigateTo({ name: "module", moduleId: selectedModule.id })}
+        title={selectedModule.title}
+        words={selectedModule.words}
       />
     );
   } else if (route.name === "training" && trainingWords.length > 0) {

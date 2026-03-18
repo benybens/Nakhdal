@@ -1,6 +1,14 @@
-import { UserProgress, VocabularyModule, VocabularyWord, WordProgress } from "../types";
+﻿import { UserProgress, VocabularyModule, VocabularyWord, WordProgress } from "../types";
 
 const STORAGE_KEY = "nakhdal_user_progress";
+const STORAGE_VERSION = 3;
+
+type PersistedProgress =
+  | UserProgress
+  | {
+      version?: number;
+      data?: UserProgress;
+    };
 
 const createEmptyWordProgress = (): WordProgress => ({
   successCount: 0,
@@ -27,14 +35,30 @@ export const loadProgress = (): UserProgress => {
   }
 
   try {
-    return JSON.parse(rawValue) as UserProgress;
+    const parsed = JSON.parse(rawValue) as PersistedProgress;
+
+    if ("version" in parsed || "data" in parsed) {
+      if (parsed.version !== STORAGE_VERSION || !parsed.data) {
+        return createDefaultProgress();
+      }
+
+      return parsed.data;
+    }
+
+    return createDefaultProgress();
   } catch {
     return createDefaultProgress();
   }
 };
 
 export const saveProgress = (progress: UserProgress) => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      version: STORAGE_VERSION,
+      data: progress,
+    }),
+  );
 };
 
 export const getModuleProgress = (
