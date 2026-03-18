@@ -17,7 +17,7 @@ JSON config example:
   "port": 21,
   "username": "your_username",
   "password": "your_password",
-  "remote_dir": "public_html/nahdar"
+  "remote_dir": "nahdar"
 }
 """
 
@@ -30,15 +30,18 @@ import posixpath
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
-from ftplib import FTP, FTP_TLS, error_perm
+from ftplib import FTP, FTP_TLS, error_perm, error_temp
 from pathlib import Path
 from typing import Any, Iterable
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = ROOT_DIR / "dist"
-DEFAULT_REMOTE_DIR = "public_html/nahdar"
+DEFAULT_REMOTE_DIR = "nahdar"
 DEFAULT_CONFIG_PATH = ROOT_DIR / "scripts" / "deploy_config.json"
+MAX_CONNECT_RETRIES = 5
+RETRYABLE_FTP_PREFIXES = ("421", "425", "426", "450", "451", "452")
 
 
 @dataclass
@@ -155,17 +158,86 @@ def ensure_remote_dirs_ftp(client: FTP, remote_dir: str) -> None:
                 raise
 
 
+def is_retryable_ftp_error(error: BaseException) -> bool:
+    message = str(error)
+    return isinstance(error, error_temp) and message.startswith(RETRYABLE_FTP_PREFIXES)
+
+
+def connect_ftp_client(config: DeployConfig, ftp_class: type[FTP], port: int) -> FTP:
+    last_error: BaseException | None = None
+
+    for attempt in range(1, MAX_CONNECT_RETRIES + 1):
+        client = ftp_class()
+        try:
+            print(
+                f"[deploy] Connecting via {config.protocol.upper()} to {config.host}:{port} "
+                f"(attempt {attempt}/{MAX_CONNECT_RETRIES})...",
+            )
+            client.connect(config.host, port, timeout=30)
+            client.login(config.username, config.password)
+            if isinstance(client, FTP_TLS):
+                client.prot_p()
+            return client
+        except (error_temp, OSError) as error:
+            client.close()
+            last_error = error
+            if not is_retryable_ftp_error(error) or attempt == MAX_CONNECT_RETRIES:
+                break
+
+            wait_seconds = attempt * 5
+            print(
+                f"[deploy] Temporary FTP error: {error}. Retrying in {wait_seconds}s...",
+                file=sys.stderr,
+            )
+            time.sleep(wait_seconds)
+
+    if isinstance(last_error, error_temp) and str(last_error).startswith("421"):
+        raise DeploymentError(
+            "FTP server is full or temporarily unavailable (421). Retry in a few minutes, "
+            "or close stale FTP sessions in Infomaniak.",
+        ) from last_error
+
+    if last_error is not None:
+        raise DeploymentError(f"FTP connection failed: {last_error}") from last_error
+
+    raise DeploymentError("FTP connection failed for an unknown reason.")
+
+
+def describe_remote_ftp(client: FTP, remote_dir: str) -> None:
+    print(f"[deploy] FTP current directory: {client.pwd()}")
+    print(f"[deploy] Remote target directory: /{remote_dir}")
+
+    index_path = posixpath.join(remote_dir, "index.html")
+    try:
+        size = client.size(index_path)
+        print(f"[deploy] Verified remote file: /{index_path} ({size} bytes)")
+    except error_perm as error:
+        print(f"[deploy] Could not verify /{index_path}: {error}", file=sys.stderr)
+
+    listing: list[str] = []
+    try:
+        listing = client.nlst(remote_dir)
+    except error_perm as error:
+        print(f"[deploy] Could not list /{remote_dir}: {error}", file=sys.stderr)
+        return
+
+    if not listing:
+        print(f"[deploy] Remote directory /{remote_dir} is empty")
+        return
+
+    print(f"[deploy] Remote directory listing for /{remote_dir}:")
+    for entry in listing[:20]:
+        print(f"[deploy]   - /{entry}")
+    if len(listing) > 20:
+        print(f"[deploy]   ... and {len(listing) - 20} more")
+
+
 def upload_via_ftp(config: DeployConfig) -> None:
     ftp_class = FTP_TLS if config.protocol == "ftps" else FTP
     port = config.port or (21 if config.protocol in {"ftp", "ftps"} else None)
     assert port is not None
 
-    print(f"[deploy] Connecting via {config.protocol.upper()} to {config.host}:{port}...")
-    with ftp_class() as client:
-        client.connect(config.host, port, timeout=30)
-        client.login(config.username, config.password)
-        if isinstance(client, FTP_TLS):
-            client.prot_p()
+    with connect_ftp_client(config, ftp_class, port) as client:
         ensure_remote_dirs_ftp(client, config.remote_dir)
 
         for local_file in iter_local_files(DIST_DIR):
@@ -178,6 +250,8 @@ def upload_via_ftp(config: DeployConfig) -> None:
             print(f"[deploy] Uploading {relative_path}")
             with local_file.open("rb") as file_handle:
                 client.storbinary(f"STOR {remote_path}", file_handle)
+
+        describe_remote_ftp(client, config.remote_dir)
 
 
 def upload_via_sftp(config: DeployConfig) -> None:
@@ -208,6 +282,8 @@ def upload_via_sftp(config: DeployConfig) -> None:
                         sftp.chmod(remote_path, 0o644)
                     except OSError:
                         pass
+
+            describe_remote_sftp(sftp, config.remote_dir)
         finally:
             sftp.close()
     finally:
@@ -223,6 +299,33 @@ def ensure_remote_dirs_sftp(client, remote_dir: str) -> None:
         except OSError:
             client.mkdir(current)
             print(f"[deploy] Created remote directory: {current}")
+
+
+def describe_remote_sftp(client, remote_dir: str) -> None:
+    print(f"[deploy] Remote target directory: /{remote_dir}")
+
+    index_path = posixpath.join(remote_dir, "index.html")
+    try:
+        stat_result = client.stat(index_path)
+        print(f"[deploy] Verified remote file: /{index_path} ({stat_result.st_size} bytes)")
+    except OSError as error:
+        print(f"[deploy] Could not verify /{index_path}: {error}", file=sys.stderr)
+
+    try:
+        entries = sorted(client.listdir(remote_dir))
+    except OSError as error:
+        print(f"[deploy] Could not list /{remote_dir}: {error}", file=sys.stderr)
+        return
+
+    if not entries:
+        print(f"[deploy] Remote directory /{remote_dir} is empty")
+        return
+
+    print(f"[deploy] Remote directory listing for /{remote_dir}:")
+    for entry in entries[:20]:
+        print(f"[deploy]   - /{posixpath.join(remote_dir, entry)}")
+    if len(entries) > 20:
+        print(f"[deploy]   ... and {len(entries) - 20} more")
 
 
 def main() -> int:
@@ -242,6 +345,7 @@ def main() -> int:
             )
 
         print("[deploy] Deployment complete.")
+        print(f"[deploy] Uploaded to remote directory: /{config.remote_dir}")
         print("[deploy] Expected public URL: https://outlandsight.com/nahdar/")
         return 0
     except DeploymentError as error:
@@ -251,4 +355,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 

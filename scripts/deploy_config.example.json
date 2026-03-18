@@ -4,6 +4,9 @@
   "port": 21,
   "username": "your_username",
   "password": "your_password",
-  "remote_dir": "public_html/nahdar"
+  "remote_dir": "nahdar"
 }
+
+
+
 
