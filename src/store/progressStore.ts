@@ -16,7 +16,7 @@ const createEmptyWordProgress = (): WordProgress => ({
   mastered: false,
 });
 
-const createDefaultProgress = (): UserProgress => ({
+export const createDefaultProgress = (): UserProgress => ({
   modules: {},
   revisionWords: [],
 });
@@ -59,6 +59,14 @@ export const saveProgress = (progress: UserProgress) => {
       data: progress,
     }),
   );
+};
+
+export const clearProgress = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(STORAGE_KEY);
 };
 
 export const getModuleProgress = (

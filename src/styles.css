@@ -164,6 +164,28 @@ input {
   flex-wrap: wrap;
 }
 
+.settings-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.settings-range input[type="range"] {
+  width: 100%;
+  accent-color: var(--green);
+}
+
+.settings-value {
+  min-width: 3.5rem;
+  text-align: right;
+  color: var(--text-main);
+}
+
+.settings-danger-button {
+  color: #b13b57;
+}
+
 .theme-chip {
   padding: 0.8rem 1rem;
   border-radius: 999px;
@@ -423,6 +445,16 @@ input {
     linear-gradient(180deg, rgba(21, 38, 29, 0.98), rgba(16, 29, 23, 0.94));
 }
 
+.trainer-card__content {
+  opacity: 1;
+  transition: opacity 500ms ease;
+}
+
+.trainer-card__content--fading-out,
+.trainer-card__content--fading-out {
+  opacity: 0;
+}
+
 .trainer-word {
   font-size: clamp(2.8rem, 10vw, 4.5rem);
   line-height: 1;
@@ -492,6 +524,19 @@ input {
 
 .choice-card--disabled {
   opacity: 0.62;
+}
+
+.choice-card--selected-wrong {
+  background: linear-gradient(180deg, #fff2f5, #ffd8e1);
+  border-color: rgba(178, 59, 87, 0.42);
+  color: #b13b57;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .choice-card--selected-wrong {
+  background: linear-gradient(180deg, rgba(88, 34, 48, 0.95), rgba(62, 23, 34, 0.95));
+  border-color: rgba(242, 107, 137, 0.42);
+  color: #ff93aa;
 }
 
 .countdown-block {

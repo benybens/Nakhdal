@@ -3,6 +3,8 @@ import failSoundUrl from "../audio/UI/fail_sound.wav";
 
 let correctAudio: HTMLAudioElement | null = null;
 let incorrectAudio: HTMLAudioElement | null = null;
+let uiFeedbackVolume = 0.8;
+const activePlayers = new Set<HTMLAudioElement>();
 
 const createAudio = (src: string) => {
   if (typeof window === "undefined") {
@@ -11,6 +13,7 @@ const createAudio = (src: string) => {
 
   const audio = new Audio(src);
   audio.preload = "auto";
+  audio.volume = uiFeedbackVolume;
   audio.load();
   return audio;
 };
@@ -36,17 +39,40 @@ const playAudio = (audio: HTMLAudioElement | null) => {
     return;
   }
 
-  audio.currentTime = 0;
-  void audio.play().catch(() => {
-    const retry = audio.cloneNode(true);
-    if (!(retry instanceof HTMLAudioElement)) {
-      return;
-    }
+  const player = audio.cloneNode(true);
+  if (!(player instanceof HTMLAudioElement)) {
+    return;
+  }
 
-    retry.preload = "auto";
-    retry.currentTime = 0;
-    void retry.play().catch(() => undefined);
+  player.preload = "auto";
+  player.volume = uiFeedbackVolume;
+  player.currentTime = 0;
+  activePlayers.add(player);
+
+  const cleanup = () => {
+    activePlayers.delete(player);
+    player.removeEventListener("ended", cleanup);
+    player.removeEventListener("error", cleanup);
+  };
+
+  player.addEventListener("ended", cleanup);
+  player.addEventListener("error", cleanup);
+
+  void player.play().catch(() => {
+    cleanup();
   });
+};
+
+export const setUiFeedbackVolume = (volume: number) => {
+  uiFeedbackVolume = Math.max(0, Math.min(1, volume));
+
+  if (correctAudio) {
+    correctAudio.volume = uiFeedbackVolume;
+  }
+
+  if (incorrectAudio) {
+    incorrectAudio.volume = uiFeedbackVolume;
+  }
 };
 
 export const primeFeedbackAudio = () => {

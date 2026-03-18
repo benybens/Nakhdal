@@ -28,6 +28,7 @@ type ModulePageProps = {
 };
 
 const AUTO_ADVANCE_MS = 5000;
+const CORRECT_ADVANCE_MS = 1000;
 const COUNTDOWN_TICK_MS = 50;
 
 const FEMININE_DZ_FORMS = new Set([
@@ -101,6 +102,7 @@ const ModulePage = ({
     type: "correct" | "incorrect";
     message: string;
   } | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [pendingAdvance, setPendingAdvance] = useState(false);
   const [pendingProgress, setPendingProgress] = useState<UserProgress | null>(null);
   const [countdownProgress, setCountdownProgress] = useState(0);
@@ -116,6 +118,7 @@ const ModulePage = ({
     setPendingProgress(null);
     setCountdownProgress(0);
     setIsExposureAdvancing(false);
+    setSelectedAnswer(null);
     setCurrentWordState(getNextWord(module, progress));
   }, [module.id, progress]);
 
@@ -167,31 +170,33 @@ const ModulePage = ({
       return;
     }
 
+    const advanceDelay = feedback?.type === "correct" ? CORRECT_ADVANCE_MS : AUTO_ADVANCE_MS;
     const startedAt = Date.now();
     setCountdownProgress(1);
 
     const progressTimer = window.setInterval(() => {
       const elapsed = Date.now() - startedAt;
-      const remainingRatio = Math.max(0, 1 - elapsed / AUTO_ADVANCE_MS);
+      const remainingRatio = Math.max(0, 1 - elapsed / advanceDelay);
       setCountdownProgress(remainingRatio);
     }, COUNTDOWN_TICK_MS);
 
     const timerId = window.setTimeout(() => {
-      const nextWord = getNextWord(module, pendingProgress);
+      const nextWord = getNextWord(module, pendingProgress, currentWordState?.word);
       setFeedback(null);
       setPendingAdvance(false);
       setSessionProgress(pendingProgress);
       setCurrentWordState(nextWord);
       onProgressChange(pendingProgress);
       setPendingProgress(null);
+      setSelectedAnswer(null);
       setCountdownProgress(0);
-    }, AUTO_ADVANCE_MS);
+    }, advanceDelay);
 
     return () => {
       window.clearInterval(progressTimer);
       window.clearTimeout(timerId);
     };
-  }, [module, onProgressChange, pendingAdvance, pendingProgress]);
+  }, [currentWordState?.word, feedback?.type, module, onProgressChange, pendingAdvance, pendingProgress]);
 
   const progressLabel = useMemo(() => {
     const currentProgress = pendingProgress ?? sessionProgress;
@@ -267,8 +272,9 @@ const ModulePage = ({
         setPendingAdvance(false);
         setPendingProgress(null);
         setCountdownProgress(0);
+        setSelectedAnswer(null);
         setSessionProgress(nextProgress);
-        setCurrentWordState(getNextWord(module, nextProgress));
+        setCurrentWordState(getNextWord(module, nextProgress, currentWordState.word));
         setIsExposureAdvancing(false);
         onProgressChange(nextProgress);
       });
@@ -276,6 +282,7 @@ const ModulePage = ({
   };
 
   const handleSubmit = (answer: string) => {
+    setSelectedAnswer(answer);
     const result = submitAnswer(
       currentWordState.word,
       answer,
@@ -289,14 +296,18 @@ const ModulePage = ({
     );
 
     playAnswerFeedbackSound(result.isCorrect);
-    setFeedback(
-      result.isCorrect
-        ? { type: "correct", message: "Oui, c'est ça" }
-        : {
-            type: "incorrect",
-            message: `Pas cette fois. La bonne réponse, c'était : ${translationLabel ?? result.correctAnswer}`,
-          },
-    );
+    if (result.isCorrect) {
+      setFeedback({ type: "correct", message: "" });
+      setPendingAdvance(true);
+      setPendingProgress(nextProgress);
+      setCountdownProgress(1);
+      return;
+    }
+
+    setFeedback({
+      type: "incorrect",
+      message: "",
+    });
     setPendingAdvance(true);
     setPendingProgress(nextProgress);
     setCountdownProgress(1);
@@ -307,13 +318,14 @@ const ModulePage = ({
       return;
     }
 
-    const nextWord = getNextWord(module, pendingProgress);
+    const nextWord = getNextWord(module, pendingProgress, currentWordState.word);
     setFeedback(null);
     setPendingAdvance(false);
     setSessionProgress(pendingProgress);
     setCurrentWordState(nextWord);
     onProgressChange(pendingProgress);
     setPendingProgress(null);
+    setSelectedAnswer(null);
     setCountdownProgress(0);
   };
 
@@ -341,6 +353,8 @@ const ModulePage = ({
         onSubmit={handleSubmit}
         options={questionOptions}
         progressLabel={progressLabel}
+        selectedAnswer={selectedAnswer}
+        showAnsweredControls={feedback?.type !== "correct"}
         translationLabel={translationLabel}
         word={currentWordState.word}
       />

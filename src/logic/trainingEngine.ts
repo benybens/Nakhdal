@@ -86,6 +86,22 @@ const shuffle = <T,>(items: T[]) => {
   return copy;
 };
 
+const areSameWord = (left: VocabularyWord, right: VocabularyWord) => left.dz === right.dz && left.fr === right.fr;
+
+const pickPreferredWord = (candidates: VocabularyWord[], previousWord?: VocabularyWord | null) => {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  if (!previousWord) {
+    return shuffle(candidates)[0];
+  }
+
+  const differentWords = candidates.filter((candidate) => !areSameWord(candidate, previousWord));
+  const pool = differentWords.length > 0 ? differentWords : candidates;
+  return shuffle(pool)[0];
+};
+
 const scoreCandidate = (expectedAnswer: string, candidateAnswer: string) => {
   const expected = normalizeAnswer(expectedAnswer);
   const candidate = normalizeAnswer(candidateAnswer);
@@ -99,26 +115,26 @@ const scoreCandidate = (expectedAnswer: string, candidateAnswer: string) => {
 export const getNextWord = (
   module: VocabularyModule,
   progress: UserProgress,
+  previousWord?: VocabularyWord | null,
 ): TrainerWordState | null => {
-  const availableWords = shuffle(module.words);
-
-  for (const word of availableWords) {
+  const availableWords = module.words.filter((word) => {
     const wordProgress = getWordProgress(progress, module.id, word);
+    return !wordProgress.mastered;
+  });
 
-    if (wordProgress.mastered) {
-      continue;
-    }
-
-    const attemptType = wordProgress.exposed ? "question" : "exposure";
-
-    return {
-      word,
-      attemptType,
-      progress: wordProgress,
-    };
+  const word = pickPreferredWord(availableWords, previousWord);
+  if (!word) {
+    return null;
   }
 
-  return null;
+  const wordProgress = getWordProgress(progress, module.id, word);
+  const attemptType = wordProgress.exposed ? "question" : "exposure";
+
+  return {
+    word,
+    attemptType,
+    progress: wordProgress,
+  };
 };
 
 export const submitAnswer = (
@@ -214,11 +230,7 @@ export const getModuleMasteredCount = (
 
 export const getRandomRevisionWord = (
   progress: UserProgress,
+  previousWord?: VocabularyWord | null,
 ): VocabularyWord | null => {
-  if (progress.revisionWords.length === 0) {
-    return null;
-  }
-
-  const randomIndex = Math.floor(Math.random() * progress.revisionWords.length);
-  return progress.revisionWords[randomIndex];
+  return pickPreferredWord(progress.revisionWords, previousWord);
 };

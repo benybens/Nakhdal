@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { WordTrainer } from "./WordTrainer";
-import { getQuestionOptions, submitAnswer } from "../logic/trainingEngine";
+import { getQuestionOptions, getRandomRevisionWord, submitAnswer } from "../logic/trainingEngine";
 import { playAnswerFeedbackSound } from "../logic/feedbackSound";
 import { VocabularyWord } from "../types";
 
@@ -12,12 +12,8 @@ type TrainingSessionProps = {
 };
 
 const AUTO_ADVANCE_MS = 5000;
+const CORRECT_ADVANCE_MS = 1000;
 const COUNTDOWN_TICK_MS = 50;
-
-const getRandomWord = (words: VocabularyWord[]) => {
-  const randomIndex = Math.floor(Math.random() * words.length);
-  return words[randomIndex];
-};
 
 export const TrainingSession = ({
   words,
@@ -25,12 +21,13 @@ export const TrainingSession = ({
   title = "Boucle de révision",
   kicker = "Session de révision",
 }: TrainingSessionProps) => {
-  const [currentWord, setCurrentWord] = useState(() => getRandomWord(words));
+  const [currentWord, setCurrentWord] = useState(() => getRandomRevisionWord({ modules: {}, revisionWords: words }) ?? words[0]);
   const [pendingNextWord, setPendingNextWord] = useState<VocabularyWord | null>(null);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "incorrect";
     message: string;
   } | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answersCount, setAnswersCount] = useState(0);
   const [countdownProgress, setCountdownProgress] = useState(0);
 
@@ -42,12 +39,13 @@ export const TrainingSession = ({
       return;
     }
 
+    const advanceDelay = feedback?.type === "correct" ? CORRECT_ADVANCE_MS : AUTO_ADVANCE_MS;
     const startedAt = Date.now();
     setCountdownProgress(1);
 
     const progressTimer = window.setInterval(() => {
       const elapsed = Date.now() - startedAt;
-      const remainingRatio = Math.max(0, 1 - elapsed / AUTO_ADVANCE_MS);
+      const remainingRatio = Math.max(0, 1 - elapsed / advanceDelay);
       setCountdownProgress(remainingRatio);
     }, COUNTDOWN_TICK_MS);
 
@@ -55,16 +53,18 @@ export const TrainingSession = ({
       setCurrentWord(pendingNextWord);
       setPendingNextWord(null);
       setFeedback(null);
+      setSelectedAnswer(null);
       setCountdownProgress(0);
-    }, AUTO_ADVANCE_MS);
+    }, advanceDelay);
 
     return () => {
       window.clearInterval(progressTimer);
       window.clearTimeout(timerId);
     };
-  }, [pendingNextWord]);
+  }, [feedback?.type, pendingNextWord]);
 
   const handleSubmit = (answer: string) => {
+    setSelectedAnswer(answer);
     const result = submitAnswer(currentWord, answer, {
       exposed: true,
       successCount: 0,
@@ -73,15 +73,20 @@ export const TrainingSession = ({
 
     playAnswerFeedbackSound(result.isCorrect);
     setAnswersCount((value) => value + 1);
-    setFeedback(
-      result.isCorrect
-        ? { type: "correct", message: "Oui, c'est ça" }
-        : {
-            type: "incorrect",
-            message: `Pas cette fois. La bonne réponse, c'était : ${result.correctAnswer}`,
-          },
-    );
-    setPendingNextWord(getRandomWord(words));
+    const nextWord = getRandomRevisionWord({ modules: {}, revisionWords: words }, currentWord) ?? currentWord;
+
+    if (result.isCorrect) {
+      setFeedback({ type: "correct", message: "" });
+      setPendingNextWord(nextWord);
+      setCountdownProgress(1);
+      return;
+    }
+
+    setFeedback({
+      type: "incorrect",
+      message: "",
+    });
+    setPendingNextWord(nextWord);
     setCountdownProgress(1);
   };
 
@@ -92,6 +97,7 @@ export const TrainingSession = ({
 
     setPendingNextWord(null);
     setFeedback(null);
+    setSelectedAnswer(null);
     setCountdownProgress(0);
   };
 
@@ -118,6 +124,8 @@ export const TrainingSession = ({
         onSubmit={handleSubmit}
         options={questionOptions}
         progressLabel={`Réponses données : ${answersCount}`}
+        selectedAnswer={selectedAnswer}
+        showAnsweredControls={feedback?.type !== "correct"}
         word={currentWord}
       />
     </div>

@@ -27,7 +27,8 @@ const sourceModules: VocabularyModule[] = [
   lesson08KeyExpressions,
 ] as VocabularyModule[];
 
-const MAX_WORDS_PER_MODULE = 10;
+const MIN_WORDS_PER_MODULE = 3;
+const MAX_WORDS_PER_MODULE = 15;
 
 const normalizeWordKey = (value: string) =>
   value
@@ -215,25 +216,41 @@ const curatedModules: VocabularyModule[] = [
   ]),
 ];
 
+const splitWordsIntoBalancedGroups = (words: VocabularyWord[]) => {
+  if (words.length <= MAX_WORDS_PER_MODULE) {
+    return [words];
+  }
+
+  const groupCount = Math.ceil(words.length / MAX_WORDS_PER_MODULE);
+  const baseSize = Math.floor(words.length / groupCount);
+  const remainder = words.length % groupCount;
+
+  if (baseSize < MIN_WORDS_PER_MODULE) {
+    throw new Error(`Unable to split ${words.length} words into modules of at least ${MIN_WORDS_PER_MODULE}.`);
+  }
+
+  const groups: VocabularyWord[][] = [];
+  let startIndex = 0;
+
+  for (let index = 0; index < groupCount; index += 1) {
+    const groupSize = baseSize + (index < remainder ? 1 : 0);
+    groups.push(words.slice(startIndex, startIndex + groupSize));
+    startIndex += groupSize;
+  }
+
+  return groups;
+};
+
 const splitModule = (module: VocabularyModule): VocabularyModule[] => {
   if (module.words.length <= MAX_WORDS_PER_MODULE) {
     return [module];
   }
 
-  const parts: VocabularyModule[] = [];
-
-  for (let index = 0; index < module.words.length; index += MAX_WORDS_PER_MODULE) {
-    const partNumber = Math.floor(index / MAX_WORDS_PER_MODULE) + 1;
-    const words = module.words.slice(index, index + MAX_WORDS_PER_MODULE);
-
-    parts.push({
-      id: `${module.id}_part_${partNumber}`,
-      title: `${module.title} - Part ${partNumber}`,
+  return splitWordsIntoBalancedGroups(module.words).map((words, index) => ({
+      id: `${module.id}_part_${index + 1}`,
+      title: `${module.title} - Partie ${index + 1}`,
       words,
-    });
-  }
-
-  return parts;
+    }));
 };
 
 export const modules: VocabularyModule[] = curatedModules.flatMap(splitModule);
