@@ -86,7 +86,8 @@ const shuffle = <T,>(items: T[]) => {
   return copy;
 };
 
-const areSameWord = (left: VocabularyWord, right: VocabularyWord) => left.dz === right.dz && left.fr === right.fr;
+const areSamePromptWord = (left: VocabularyWord, right: VocabularyWord) =>
+  normalizeAnswer(left.dz) === normalizeAnswer(right.dz);
 
 const pickPreferredWord = (candidates: VocabularyWord[], previousWord?: VocabularyWord | null) => {
   if (candidates.length === 0) {
@@ -97,7 +98,7 @@ const pickPreferredWord = (candidates: VocabularyWord[], previousWord?: Vocabula
     return shuffle(candidates)[0];
   }
 
-  const differentWords = candidates.filter((candidate) => !areSameWord(candidate, previousWord));
+  const differentWords = candidates.filter((candidate) => !areSamePromptWord(candidate, previousWord));
   const pool = differentWords.length > 0 ? differentWords : candidates;
   return shuffle(pool)[0];
 };
