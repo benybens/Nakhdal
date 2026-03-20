@@ -303,6 +303,23 @@ input {
   background: linear-gradient(180deg, rgba(24, 40, 31, 0.82), rgba(19, 34, 26, 0.92));
 }
 
+.lesson-group--completed {
+  border-color: rgba(0, 102, 51, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(111, 194, 146, 0.22), transparent 42%),
+    linear-gradient(180deg, #f3fbf6, #e5f5eb);
+  box-shadow:
+    0 14px 30px rgba(0, 102, 51, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="dark"] .lesson-group--completed {
+  border-color: rgba(111, 194, 146, 0.34);
+  background:
+    radial-gradient(circle at top right, rgba(111, 194, 146, 0.16), transparent 46%),
+    linear-gradient(180deg, rgba(26, 54, 40, 0.98), rgba(19, 42, 30, 0.98));
+}
+
 .lesson-toggle {
   width: 100%;
   display: flex;
@@ -328,6 +345,15 @@ input {
   margin-top: 0.2rem;
   color: var(--text-soft);
   font-size: 0.92rem;
+}
+
+.lesson-toggle--completed .lesson-toggle__title,
+.lesson-toggle--completed .lesson-toggle__meta {
+  color: var(--green);
+}
+
+.lesson-toggle--completed .lesson-toggle__meta {
+  font-weight: 700;
 }
 
 .lesson-toggle__chevron {

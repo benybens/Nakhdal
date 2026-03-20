@@ -15,11 +15,11 @@ import {
   updateWordProgress,
 } from "../store/progressStore";
 import { playAnswerFeedbackSound } from "../logic/feedbackSound";
-import { TrainerWordState, UserProgress, VocabularyModule, VocabularyWord } from "../types";
+import { TrainerWordState, UserProgress, VocabularyLesson, VocabularyWord } from "../types";
 
 type ModulePageProps = {
-  module: VocabularyModule;
-  nextModule?: VocabularyModule | null;
+  module: VocabularyLesson;
+  nextModule?: VocabularyLesson | null;
   progress: UserProgress;
   onBack: () => void;
   onGoToModuleTraining?: () => void;
@@ -229,12 +229,12 @@ const ModulePage = ({
           <div className="completion-actions">
             {onGoToModuleTraining ? (
               <button className="primary-button" onClick={onGoToModuleTraining} type="button">
-                Rejouer ce module
+                Rejouer cette leçon
               </button>
             ) : null}
             {nextModule && onGoToNextModule ? (
               <button className="secondary-button" onClick={onGoToNextModule} type="button">
-                Passer à la suite
+                Passer à la leçon suivante
               </button>
             ) : null}
             <button className="secondary-button" onClick={onBack} type="button">
@@ -274,7 +274,9 @@ const ModulePage = ({
         setCountdownProgress(0);
         setSelectedAnswer(null);
         setSessionProgress(nextProgress);
-        setCurrentWordState(getNextWord(module, nextProgress, currentWordState.word));
+        setCurrentWordState(
+          getNextWord(module, nextProgress, currentWordState.word, { forceQuestion: true }),
+        );
         setIsExposureAdvancing(false);
         onProgressChange(nextProgress);
       });

@@ -1,7 +1,7 @@
-import { VocabularyModule } from "../types";
+import { VocabularyLesson } from "../types";
 
 type ModuleCardProps = {
-  module: VocabularyModule;
+  module: VocabularyLesson;
   progressLabel: string;
   isCompleted?: boolean;
   onOpen: () => void;

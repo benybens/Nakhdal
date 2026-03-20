@@ -2,7 +2,7 @@ import {
   AnswerResult,
   TrainerWordState,
   UserProgress,
-  VocabularyModule,
+  VocabularyLesson,
   VocabularyWord,
   WordProgress,
 } from "../types";
@@ -113,17 +113,30 @@ const scoreCandidate = (expectedAnswer: string, candidateAnswer: string) => {
   return distance + lengthDelta * 0.25;
 };
 
+type GetNextWordOptions = {
+  forceQuestion?: boolean;
+};
+
 export const getNextWord = (
-  module: VocabularyModule,
+  module: VocabularyLesson,
   progress: UserProgress,
   previousWord?: VocabularyWord | null,
+  options: GetNextWordOptions = {},
 ): TrainerWordState | null => {
   const availableWords = module.words.filter((word) => {
     const wordProgress = getWordProgress(progress, module.id, word);
     return !wordProgress.mastered;
   });
 
-  const word = pickPreferredWord(availableWords, previousWord);
+  const questionWords = availableWords.filter((word) => {
+    const wordProgress = getWordProgress(progress, module.id, word);
+    return wordProgress.exposed;
+  });
+  const candidateWords = options.forceQuestion && questionWords.length > 0
+    ? questionWords
+    : availableWords;
+
+  const word = pickPreferredWord(candidateWords, previousWord);
   if (!word) {
     return null;
   }
@@ -154,7 +167,7 @@ export const submitAnswer = (
     updatedProgress: {
       exposed: true,
       successCount: nextSuccessCount,
-      mastered: nextSuccessCount >= 2,
+      mastered: nextSuccessCount >= 1,
     },
   };
 };
@@ -204,7 +217,7 @@ export const markExposureComplete = (currentProgress: WordProgress): WordProgres
 });
 
 export const isModuleCompleted = (
-  module: VocabularyModule,
+  module: VocabularyLesson,
   progress: UserProgress,
 ): boolean => {
   const moduleProgress = getModuleProgress(progress, module);
@@ -220,7 +233,7 @@ export const isModuleCompleted = (
 };
 
 export const getModuleMasteredCount = (
-  module: VocabularyModule,
+  module: VocabularyLesson,
   progress: UserProgress,
 ) => {
   return module.words.filter((word) => {

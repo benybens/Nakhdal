@@ -1,4 +1,4 @@
-﻿import { UserProgress, VocabularyModule, VocabularyWord, WordProgress } from "../types";
+﻿import { UserProgress, VocabularyLesson, VocabularyWord, WordProgress } from "../types";
 
 const STORAGE_KEY = "nakhdal_user_progress";
 const STORAGE_VERSION = 3;
@@ -71,7 +71,7 @@ export const clearProgress = () => {
 
 export const getModuleProgress = (
   progress: UserProgress,
-  module: VocabularyModule,
+  module: VocabularyLesson,
 ) => {
   return (
     progress.modules[module.id] ?? {
@@ -119,7 +119,7 @@ export const updateWordProgress = (
 
 export const markModuleCompleted = (
   progress: UserProgress,
-  module: VocabularyModule,
+  module: VocabularyLesson,
 ): UserProgress => {
   const existingModuleProgress = getModuleProgress(progress, module);
   const nextRevisionWords = [...progress.revisionWords];

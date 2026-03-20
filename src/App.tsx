@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { modules } from "./data/modules";
+import { lessons, modules } from "./data/modules";
 import { Home } from "./pages/Home";
 import { primeFeedbackAudio, setUiFeedbackVolume } from "./logic/feedbackSound";
 import { ModulePage } from "./pages/ModulePage";
@@ -129,12 +129,12 @@ function App() {
     };
   }, []);
 
-  const selectedModule = useMemo(() => {
+  const selectedLesson = useMemo(() => {
     if (route.name !== "module" && route.name !== "module-training") {
       return null;
     }
 
-    return modules.find((module) => module.id === route.moduleId) ?? null;
+    return lessons.find((lesson) => lesson.id === route.moduleId) ?? null;
   }, [route]);
 
   useEffect(() => {
@@ -144,26 +144,26 @@ function App() {
 
     console.log("[Nahdar][App] Opening module route", {
       route,
-      selectedModuleId: selectedModule?.id ?? null,
-      selectedModuleTitle: selectedModule?.title ?? null,
-      selectedModuleWordCount: selectedModule?.words.length ?? 0,
+      selectedModuleId: selectedLesson?.id ?? null,
+      selectedModuleTitle: selectedLesson?.title ?? null,
+      selectedModuleWordCount: selectedLesson?.words.length ?? 0,
       selectedModuleWords:
-        selectedModule?.words.map((word) => ({
+        selectedLesson?.words.map((word) => ({
           dz: word.dz,
           fr: word.fr,
         })) ?? [],
     });
-  }, [route, selectedModule]);
+  }, [route, selectedLesson]);
 
-  const selectedModuleIndex = useMemo(() => {
-    if (!selectedModule) {
+  const selectedLessonIndex = useMemo(() => {
+    if (!selectedLesson) {
       return -1;
     }
 
-    return modules.findIndex((module) => module.id === selectedModule.id);
-  }, [selectedModule]);
+    return lessons.findIndex((lesson) => lesson.id === selectedLesson.id);
+  }, [selectedLesson]);
 
-  const nextModule = selectedModuleIndex >= 0 ? modules[selectedModuleIndex + 1] ?? null : null;
+  const nextLesson = selectedLessonIndex >= 0 ? lessons[selectedLessonIndex + 1] ?? null : null;
   const trainingWords = progress.revisionWords;
 
   const handleResetApp = () => {
@@ -187,25 +187,25 @@ function App() {
 
   let content;
 
-  if (route.name === "module" && selectedModule) {
+  if (route.name === "module" && selectedLesson) {
     content = (
       <ModulePage
-        module={selectedModule}
-        nextModule={nextModule}
+        module={selectedLesson}
+        nextModule={nextLesson}
         onBack={() => navigateTo({ name: "home" })}
-        onGoToModuleTraining={() => navigateTo({ name: "module-training", moduleId: selectedModule.id })}
-        onGoToNextModule={nextModule ? () => navigateTo({ name: "module", moduleId: nextModule.id }) : undefined}
+        onGoToModuleTraining={() => navigateTo({ name: "module-training", moduleId: selectedLesson.id })}
+        onGoToNextModule={nextLesson ? () => navigateTo({ name: "module", moduleId: nextLesson.id }) : undefined}
         onProgressChange={setProgress}
         progress={progress}
       />
     );
-  } else if (route.name === "module-training" && selectedModule) {
+  } else if (route.name === "module-training" && selectedLesson) {
     content = (
       <TrainingPage
-        kicker="Révision du module"
-        onBack={() => navigateTo({ name: "module", moduleId: selectedModule.id })}
-        title={selectedModule.title}
-        words={selectedModule.words}
+        kicker="Révision de la leçon"
+        onBack={() => navigateTo({ name: "module", moduleId: selectedLesson.id })}
+        title={selectedLesson.title}
+        words={selectedLesson.words}
       />
     );
   } else if (route.name === "training" && trainingWords.length > 0) {
@@ -215,7 +215,7 @@ function App() {
       <Home
         canStartTraining={trainingWords.length > 0}
         modules={modules}
-        onOpenModule={(moduleId) => navigateTo({ name: "module", moduleId })}
+        onOpenLesson={(moduleId) => navigateTo({ name: "module", moduleId })}
         onOpenTraining={() => navigateTo({ name: "training" })}
         progress={progress}
       />

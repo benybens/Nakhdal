@@ -3,10 +3,16 @@ export type VocabularyWord = {
   fr: string;
 };
 
-export type VocabularyModule = {
+export type VocabularyLesson = {
   id: string;
   title: string;
   words: VocabularyWord[];
+};
+
+export type VocabularyModule = {
+  id: string;
+  title: string;
+  lessons: VocabularyLesson[];
 };
 
 export type WordProgress = {

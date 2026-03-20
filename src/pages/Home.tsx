@@ -2,60 +2,29 @@ import { useMemo, useState } from "react";
 import { ModuleCard } from "../components/ModuleCard";
 import { getModuleMasteredCount, isModuleCompleted } from "../logic/trainingEngine";
 import { getModuleProgress } from "../store/progressStore";
-import { UserProgress, VocabularyModule } from "../types";
+import { UserProgress, VocabularyLesson, VocabularyModule } from "../types";
 
 type HomeProps = {
   modules: VocabularyModule[];
   progress: UserProgress;
   canStartTraining: boolean;
-  onOpenModule: (moduleId: string) => void;
+  onOpenLesson: (lessonId: string) => void;
   onOpenTraining: () => void;
 };
-
-type LessonGroup = {
-  id: string;
-  title: string;
-  modules: VocabularyModule[];
-};
-
-const getLessonTitle = (moduleTitle: string) => moduleTitle.replace(/ - Part \d+$/, "");
-const getLessonId = (moduleId: string) => moduleId.replace(/_part_\d+$/, "");
 
 export const Home = ({
   modules,
   progress,
   canStartTraining,
-  onOpenModule,
+  onOpenLesson,
   onOpenTraining,
 }: HomeProps) => {
-  const lessonGroups = useMemo<LessonGroup[]>(() => {
-    const groups = new Map<string, LessonGroup>();
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
-    for (const module of modules) {
-      const lessonId = getLessonId(module.id);
-      const existingGroup = groups.get(lessonId);
-
-      if (existingGroup) {
-        existingGroup.modules.push(module);
-        continue;
-      }
-
-      groups.set(lessonId, {
-        id: lessonId,
-        title: getLessonTitle(module.title),
-        modules: [module],
-      });
-    }
-
-    return Array.from(groups.values());
-  }, [modules]);
-
-  const [expandedLessons, setExpandedLessons] = useState<Record<string, boolean>>({});
-
-  const toggleLesson = (lessonId: string) => {
-    setExpandedLessons((current) => ({
+  const toggleModule = (moduleId: string) => {
+    setExpandedModules((current) => ({
       ...current,
-      [lessonId]: !current[lessonId],
+      [moduleId]: !current[moduleId],
     }));
   };
 
@@ -72,38 +41,42 @@ export const Home = ({
       <section className="panel">
         <div className="section-heading">
           <h2>Par où on commence ?</h2>
-          <span className="section-note">Choisis un thème et laisse les mots venir tranquilles.</span>
+          <span className="section-note">Choisis un module, puis avance leçon par leçon.</span>
         </div>
 
         <div className="lesson-list">
-          {lessonGroups.map((lesson) => {
-            const isExpanded = expandedLessons[lesson.id] ?? false;
-            const completedModules = lesson.modules.filter((module) =>
-              isModuleCompleted(module, progress),
+          {modules.map((moduleGroup) => {
+            const isExpanded = expandedModules[moduleGroup.id] ?? false;
+            const completedLessons = moduleGroup.lessons.filter((lesson: VocabularyLesson) =>
+              isModuleCompleted(lesson, progress),
             ).length;
-            const exploredModules = lesson.modules.filter((module) => {
-              const moduleProgress = getModuleProgress(progress, module);
-              return Object.keys(moduleProgress.wordStats).length > 0;
+            const isCompleted = completedLessons === moduleGroup.lessons.length;
+            const exploredLessons = moduleGroup.lessons.filter((lesson: VocabularyLesson) => {
+              const lessonProgress = getModuleProgress(progress, lesson);
+              return Object.keys(lessonProgress.wordStats).length > 0;
             }).length;
 
-            let lessonProgress = "Pas encore exploré";
-            if (completedModules === lesson.modules.length) {
-              lessonProgress = "Tous les modules sont terminés";
-            } else if (exploredModules > 0) {
-              lessonProgress = `Tu as déjà ouvert ${exploredModules} module${exploredModules > 1 ? "s" : ""} sur ${lesson.modules.length}`;
+            let moduleProgressLabel = "Pas encore exploré";
+            if (isCompleted) {
+              moduleProgressLabel = "Toutes les leçons sont terminées";
+            } else if (exploredLessons > 0) {
+              moduleProgressLabel = `Tu as déjà ouvert ${exploredLessons} leçon${exploredLessons > 1 ? "s" : ""} sur ${moduleGroup.lessons.length}`;
             }
 
             return (
-              <section className="lesson-group" key={lesson.id}>
+              <section
+                className={`lesson-group ${isCompleted ? "lesson-group--completed" : ""}`.trim()}
+                key={moduleGroup.id}
+              >
                 <button
                   aria-expanded={isExpanded}
-                  className="lesson-toggle"
-                  onClick={() => toggleLesson(lesson.id)}
+                  className={`lesson-toggle ${isCompleted ? "lesson-toggle--completed" : ""}`.trim()}
+                  onClick={() => toggleModule(moduleGroup.id)}
                   type="button"
                 >
                   <span>
-                    <span className="lesson-toggle__title">{lesson.title}</span>
-                    <span className="lesson-toggle__meta">{lessonProgress}</span>
+                    <span className="lesson-toggle__title">{moduleGroup.title}</span>
+                    <span className="lesson-toggle__meta">{moduleProgressLabel}</span>
                   </span>
                   <span className={`lesson-toggle__chevron ${isExpanded ? "lesson-toggle__chevron--open" : ""}`}>
                     v
@@ -112,22 +85,22 @@ export const Home = ({
 
                 {isExpanded ? (
                   <div className="lesson-submodules">
-                    {lesson.modules.map((module) => {
-                      const knownWords = getModuleMasteredCount(module, progress);
-                      const totalWords = module.words.length;
+                    {moduleGroup.lessons.map((lesson, index) => {
+                      const knownWords = getModuleMasteredCount(lesson, progress);
+                      const totalWords = lesson.words.length;
                       const completionPercent = Math.round((knownWords / totalWords) * 100);
-                      const isCompleted = isModuleCompleted(module, progress);
+                      const isCompleted = isModuleCompleted(lesson, progress);
                       const progressLabel = isCompleted
                         ? "Terminé"
                         : `${knownWords} / ${totalWords} mots • ${completionPercent}%`;
 
                       return (
                         <ModuleCard
-                          key={module.id}
+                          key={lesson.id}
                           isCompleted={isCompleted}
-                          module={module}
-                          onOpen={() => onOpenModule(module.id)}
-                          progressLabel={progressLabel}
+                          module={lesson}
+                          onOpen={() => onOpenLesson(lesson.id)}
+                          progressLabel={`Leçon ${index + 1} • ${progressLabel}`}
                         />
                       );
                     })}
