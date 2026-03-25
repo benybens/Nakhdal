@@ -1,48 +1,91 @@
-﻿import { UserProgress, VocabularyLesson, VocabularyWord, WordProgress } from "../types";
+import { getSubModulesForModule, getWordIdsForSubModule } from "../domain/modules";
+import { wordBank } from "../domain/wordBank";
+import type { SessionScope, WordEntry, WordProgress as LearningWordProgress } from "../types/learning";
+import { migrateProgress } from "./migration";
 
 const STORAGE_KEY = "nakhdal_user_progress";
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
-type PersistedProgress =
-  | UserProgress
-  | {
-      version?: number;
-      data?: UserProgress;
-    };
+type PersistedProgress = {
+  version?: number;
+  data?: ProgressStoreState | unknown;
+};
 
-const createEmptyWordProgress = (): WordProgress => ({
-  successCount: 0,
-  exposed: false,
-  mastered: false,
+export type ProgressStoreState = {
+  words: Record<string, LearningWordProgress>;
+};
+
+const wordBankById = new Map(wordBank.map((word) => [word.id, word]));
+
+const isProgressStoreState = (value: unknown): value is ProgressStoreState => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as ProgressStoreState;
+  return typeof candidate.words === "object" && candidate.words !== null;
+};
+
+const isLegacyProgress = (value: unknown): boolean => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as { modules?: unknown };
+  return typeof candidate.modules === "object" && candidate.modules !== null;
+};
+
+const getWordsFromIds = (wordIds: string[]): WordEntry[] => {
+  const seen = new Set<string>();
+  const words: WordEntry[] = [];
+
+  for (const wordId of wordIds) {
+    if (seen.has(wordId)) {
+      continue;
+    }
+
+    const word = wordBankById.get(wordId);
+    if (!word) {
+      continue;
+    }
+
+    seen.add(wordId);
+    words.push(word);
+  }
+
+  return words;
+};
+
+export const createDefaultProgress = (): ProgressStoreState => ({
+  words: {},
 });
 
-export const createDefaultProgress = (): UserProgress => ({
-  modules: {},
-  revisionWords: [],
-});
-
-export const getWordKey = (word: VocabularyWord) => word.dz;
-
-export const loadProgress = (): UserProgress => {
+export const loadProgress = (): ProgressStoreState => {
   if (typeof window === "undefined") {
     return createDefaultProgress();
   }
 
   const rawValue = window.localStorage.getItem(STORAGE_KEY);
-
   if (!rawValue) {
     return createDefaultProgress();
   }
 
   try {
-    const parsed = JSON.parse(rawValue) as PersistedProgress;
+    const parsed = JSON.parse(rawValue) as PersistedProgress | unknown;
 
-    if ("version" in parsed || "data" in parsed) {
-      if (parsed.version !== STORAGE_VERSION || !parsed.data) {
-        return createDefaultProgress();
+    if (isLegacyProgress(parsed)) {
+      return { words: migrateProgress(parsed) };
+    }
+
+    if (parsed && typeof parsed === "object" && ("version" in parsed || "data" in parsed)) {
+      const persisted = parsed as PersistedProgress;
+      if (persisted.version === STORAGE_VERSION && isProgressStoreState(persisted.data)) {
+        return persisted.data;
       }
 
-      return parsed.data;
+      if (isLegacyProgress(persisted.data)) {
+        return { words: migrateProgress(persisted.data) };
+      }
     }
 
     return createDefaultProgress();
@@ -51,7 +94,7 @@ export const loadProgress = (): UserProgress => {
   }
 };
 
-export const saveProgress = (progress: UserProgress) => {
+export const saveProgress = (progress: ProgressStoreState) => {
   window.localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({
@@ -69,80 +112,47 @@ export const clearProgress = () => {
   window.localStorage.removeItem(STORAGE_KEY);
 };
 
-export const getModuleProgress = (
-  progress: UserProgress,
-  module: VocabularyLesson,
-) => {
-  return (
-    progress.modules[module.id] ?? {
-      wordStats: {},
-      completed: false,
-    }
-  );
-};
-
-export const getWordProgress = (
-  progress: UserProgress,
-  moduleId: string,
-  word: VocabularyWord,
-): WordProgress => {
-  return (
-    progress.modules[moduleId]?.wordStats[getWordKey(word)] ?? createEmptyWordProgress()
-  );
-};
-
-export const updateWordProgress = (
-  progress: UserProgress,
-  moduleId: string,
-  word: VocabularyWord,
-  wordProgress: WordProgress,
-): UserProgress => {
-  const moduleProgress = progress.modules[moduleId] ?? {
-    wordStats: {},
-    completed: false,
+export const getWordProgress = (progress: ProgressStoreState, wordId: string): LearningWordProgress =>
+  progress.words[wordId] ?? {
+    word_id: wordId,
+    success_count: 0,
+    failure_count: 0,
+    last_seen: null,
+    mastery_level: 0,
   };
 
-  return {
-    ...progress,
-    modules: {
-      ...progress.modules,
-      [moduleId]: {
-        ...moduleProgress,
-        wordStats: {
-          ...moduleProgress.wordStats,
-          [getWordKey(word)]: wordProgress,
-        },
-      },
-    },
-  };
-};
-
-export const markModuleCompleted = (
-  progress: UserProgress,
-  module: VocabularyLesson,
-): UserProgress => {
-  const existingModuleProgress = getModuleProgress(progress, module);
-  const nextRevisionWords = [...progress.revisionWords];
-
-  for (const word of module.words) {
-    const alreadyAdded = nextRevisionWords.some(
-      (revisionWord) => revisionWord.dz === word.dz,
-    );
-
-    if (!alreadyAdded) {
-      nextRevisionWords.push(word);
-    }
+export const getWordsByScope = (scope: SessionScope): WordEntry[] => {
+  if (scope.type === "global") {
+    return [...wordBank];
   }
 
-  return {
-    ...progress,
-    modules: {
-      ...progress.modules,
-      [module.id]: {
-        ...existingModuleProgress,
-        completed: true,
-      },
-    },
-    revisionWords: nextRevisionWords,
-  };
+  if (scope.type === "submodule") {
+    return getWordsFromIds(getWordIdsForSubModule(scope.subModuleId));
+  }
+
+  return getWordsFromIds(getSubModulesForModule(scope.moduleId).flatMap((subModule) => getWordIdsForSubModule(subModule.id)));
 };
+
+export const getWeakWords = (progress: ProgressStoreState): WordEntry[] =>
+  Object.values(progress.words)
+    .filter((wordProgress) => wordProgress.mastery_level > 0 && wordProgress.mastery_level < 3)
+    .sort((left, right) => {
+      if (right.failure_count !== left.failure_count) {
+        return right.failure_count - left.failure_count;
+      }
+
+      if (left.mastery_level !== right.mastery_level) {
+        return left.mastery_level - right.mastery_level;
+      }
+
+      return left.success_count - right.success_count;
+    })
+    .map((wordProgress) => wordBankById.get(wordProgress.word_id))
+    .filter((word): word is WordEntry => Boolean(word));
+
+export const getMasteredWords = (progress: ProgressStoreState): WordEntry[] =>
+  Object.values(progress.words)
+    .filter((wordProgress) => wordProgress.mastery_level >= 3)
+    .map((wordProgress) => wordBankById.get(wordProgress.word_id))
+    .filter((word): word is WordEntry => Boolean(word));
+

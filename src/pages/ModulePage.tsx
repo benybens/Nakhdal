@@ -1,171 +1,93 @@
 import { useEffect, useMemo, useState } from "react";
 import { WordTrainer } from "../components/WordTrainer";
-import {
-  getModuleMasteredCount,
-  getNextWord,
-  getQuestionOptions,
-  isModuleCompleted,
-  markExposureComplete,
-  submitAnswer,
-} from "../logic/trainingEngine";
-import {
-  getModuleProgress,
-  getWordProgress,
-  markModuleCompleted,
-  updateWordProgress,
-} from "../store/progressStore";
 import { playAnswerFeedbackSound } from "../logic/feedbackSound";
-import { TrainerWordState, UserProgress, VocabularyLesson, VocabularyWord } from "../types";
+import { advanceSession, createSessionState, evaluateAnswer, getCurrentSessionItem } from "../logic/sessionEngine";
+import { getWordsByScope, type ProgressStoreState } from "../store/progressStore";
+import type { VocabularyWord } from "../types";
+import type { LearningSessionState } from "../logic/sessionEngine";
+import type { SubModule } from "../types/learning";
 
 type ModulePageProps = {
-  module: VocabularyLesson;
-  nextModule?: VocabularyLesson | null;
-  progress: UserProgress;
+  subModule: SubModule;
+  nextSubModule?: SubModule | null;
+  progress: ProgressStoreState;
   onBack: () => void;
   onGoToModuleTraining?: () => void;
   onGoToNextModule?: () => void;
-  onProgressChange: (nextProgress: UserProgress) => void;
+  onProgressChange: (nextProgress: ProgressStoreState) => void;
 };
 
 const AUTO_ADVANCE_MS = 5000;
 const CORRECT_ADVANCE_MS = 1000;
 const COUNTDOWN_TICK_MS = 50;
+const SUBMODULE_SESSION_SIZE = 10;
 
-const FEMININE_DZ_FORMS = new Set([
-  "Ntia",
-  "Hiya",
-  "Hadi",
-  "Hadik",
-  "Ta3ha",
-  "Sa7bati",
-  "S7abati",
-  "Chaba",
-  "Mli7a",
-  "3a9la",
-  "3ayana",
-  "Sahla",
-  "Wa3ra",
-  "S3iba",
-]);
-
-const MASCULINE_DZ_FORMS = new Set([
-  "Nta",
-  "Houwa",
-  "Hada",
-  "Hadak",
-  "Ta3ou",
-  "Sa7bi",
-  "S7abi",
-  "Chbab",
-  "Mli7",
-  "3a9al",
-  "3ayan",
-  "Sahal",
-  "Wa3ar",
-  "S3ib",
-]);
+const FEMININE_DZ_FORMS = new Set(["Ntia", "Hiya", "Hadi", "Hadik", "Ta3ha", "Sa7bati", "S7abati", "Chaba", "Mli7a", "3a9la", "3ayana", "Sahla", "Wa3ra", "S3iba"]);
+const MASCULINE_DZ_FORMS = new Set(["Nta", "Houwa", "Hada", "Hadak", "Ta3ou", "Sa7bi", "S7abi", "Chbab", "Mli7", "3a9al", "3ayan", "Sahal", "Wa3ar", "S3ib"]);
 
 const getGenderSuffix = (word: VocabularyWord) => {
-  if (FEMININE_DZ_FORMS.has(word.dz)) {
-    return "(f)";
-  }
-
-  if (MASCULINE_DZ_FORMS.has(word.dz)) {
-    return "(m)";
-  }
-
+  if (FEMININE_DZ_FORMS.has(word.dz)) return "(f)";
+  if (MASCULINE_DZ_FORMS.has(word.dz)) return "(m)";
   return "";
 };
 
 const formatFrenchLabel = (word: VocabularyWord, moduleWords: VocabularyWord[]) => {
   const sameFrenchWords = moduleWords.filter((candidate) => candidate.fr === word.fr);
-
-  if (sameFrenchWords.length < 2) {
-    return word.fr;
-  }
-
+  if (sameFrenchWords.length < 2) return word.fr;
   const genderSuffix = getGenderSuffix(word);
   return genderSuffix ? `${word.fr} ${genderSuffix}` : word.fr;
 };
 
 const ModulePage = ({
-  module,
-  nextModule,
+  subModule,
+  nextSubModule,
   progress,
   onBack,
   onGoToModuleTraining,
   onGoToNextModule,
   onProgressChange,
 }: ModulePageProps) => {
-  const [sessionProgress, setSessionProgress] = useState<UserProgress>(progress);
-  const [feedback, setFeedback] = useState<{
-    type: "correct" | "incorrect";
-    message: string;
-  } | null>(null);
+  const [sessionProgress, setSessionProgress] = useState<ProgressStoreState>(progress);
+  const [sessionState, setSessionState] = useState<LearningSessionState | null>(null);
+  const [feedback, setFeedback] = useState<{ type: "correct" | "incorrect"; message: string } | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [pendingAdvance, setPendingAdvance] = useState(false);
-  const [pendingProgress, setPendingProgress] = useState<UserProgress | null>(null);
+  const [pendingProgress, setPendingProgress] = useState<ProgressStoreState | null>(null);
+  const [pendingSessionState, setPendingSessionState] = useState<LearningSessionState | null>(null);
   const [countdownProgress, setCountdownProgress] = useState(0);
-  const [isExposureAdvancing, setIsExposureAdvancing] = useState(false);
-  const [currentWordState, setCurrentWordState] = useState<TrainerWordState | null>(() =>
-    getNextWord(module, progress),
+  const [recallRevealed, setRecallRevealed] = useState(false);
+
+  const moduleWords = useMemo(
+    () => getWordsByScope({ type: "submodule", moduleId: subModule.moduleId, subModuleId: subModule.id }).map((word) => ({ dz: word.dz, fr: word.fr })),
+    [subModule.id, subModule.moduleId],
+  );
+
+  const moduleWordById = useMemo(
+    () => new Map(getWordsByScope({ type: "submodule", moduleId: subModule.moduleId, subModuleId: subModule.id }).map((word) => [word.id, { dz: word.dz, fr: word.fr }])),
+    [subModule.id, subModule.moduleId],
   );
 
   useEffect(() => {
     setSessionProgress(progress);
+    setSessionState(createSessionState({ type: "submodule", moduleId: subModule.moduleId, subModuleId: subModule.id }, Math.min(SUBMODULE_SESSION_SIZE, moduleWords.length), progress.words));
     setFeedback(null);
+    setSelectedAnswer(null);
     setPendingAdvance(false);
     setPendingProgress(null);
+    setPendingSessionState(null);
     setCountdownProgress(0);
-    setIsExposureAdvancing(false);
-    setSelectedAnswer(null);
-    setCurrentWordState(getNextWord(module, progress));
-  }, [module.id, progress]);
+    setRecallRevealed(false);
+  }, [moduleWords.length, progress, subModule.id, subModule.moduleId]);
 
-  const questionOptions = useMemo(() => {
-    if (!currentWordState || currentWordState.attemptType !== "question") {
-      return [];
-    }
-
-    return getQuestionOptions(currentWordState.word, module.words);
-  }, [currentWordState, module.words]);
-
-  const completed = isModuleCompleted(module, sessionProgress);
-  const moduleProgress = getModuleProgress(sessionProgress, module);
+  const currentSessionItem = sessionState ? getCurrentSessionItem(sessionState) : null;
+  const currentWord = currentSessionItem ? moduleWordById.get(currentSessionItem.word_id) ?? null : null;
 
   useEffect(() => {
-    const wordStates = module.words.map((word) => {
-      const wordProgress = getWordProgress(sessionProgress, module.id, word);
-      return {
-        dz: word.dz,
-        fr: word.fr,
-        exposed: wordProgress.exposed,
-        mastered: wordProgress.mastered,
-        successCount: wordProgress.successCount,
-      };
-    });
-
-    console.log("[Nahdar][ModulePage] Module state", {
-      moduleId: module.id,
-      moduleTitle: module.title,
-      wordCount: module.words.length,
-      completed,
-      moduleProgress,
-      currentWordState,
-      wordStates,
-    });
-  }, [completed, currentWordState, module, moduleProgress, sessionProgress]);
+    setRecallRevealed(false);
+  }, [currentSessionItem?.word_id]);
 
   useEffect(() => {
-    if (completed && !moduleProgress.completed) {
-      const nextProgress = markModuleCompleted(sessionProgress, module);
-      setSessionProgress(nextProgress);
-      onProgressChange(nextProgress);
-    }
-  }, [completed, module, moduleProgress.completed, onProgressChange, sessionProgress]);
-
-  useEffect(() => {
-    if (!pendingAdvance || !pendingProgress) {
+    if (!pendingAdvance || !pendingProgress || !pendingSessionState) {
       setCountdownProgress(0);
       return;
     }
@@ -181,185 +103,133 @@ const ModulePage = ({
     }, COUNTDOWN_TICK_MS);
 
     const timerId = window.setTimeout(() => {
-      const nextWord = getNextWord(module, pendingProgress, currentWordState?.word);
       setFeedback(null);
       setPendingAdvance(false);
       setSessionProgress(pendingProgress);
-      setCurrentWordState(nextWord);
+      setSessionState(pendingSessionState);
       onProgressChange(pendingProgress);
       setPendingProgress(null);
+      setPendingSessionState(null);
       setSelectedAnswer(null);
       setCountdownProgress(0);
+      setRecallRevealed(false);
     }, advanceDelay);
 
     return () => {
       window.clearInterval(progressTimer);
       window.clearTimeout(timerId);
     };
-  }, [currentWordState?.word, feedback?.type, module, onProgressChange, pendingAdvance, pendingProgress]);
+  }, [feedback?.type, onProgressChange, pendingAdvance, pendingProgress, pendingSessionState]);
 
-  const progressLabel = useMemo(() => {
-    const currentProgress = pendingProgress ?? sessionProgress;
-    const currentMasteredCount = getModuleMasteredCount(module, currentProgress);
-    return `Mot ${Math.min(currentMasteredCount + 1, module.words.length)} sur ${module.words.length}`;
-  }, [module, pendingProgress, sessionProgress]);
-
-  const translationLabel = currentWordState
-    ? formatFrenchLabel(currentWordState.word, module.words)
-    : undefined;
+  const progressLabel = sessionState
+    ? `Mot ${Math.min(sessionState.answeredCount + 1, sessionState.totalPlanned)} sur ${sessionState.totalPlanned}`
+    : "Aucune session disponible";
+  const translationLabel = currentWord ? formatFrenchLabel(currentWord, moduleWords) : undefined;
 
   const getOptionLabel = (option: string) => {
-    if (!currentWordState || option !== currentWordState.word.fr) {
+    if (!currentWord || option !== currentWord.fr) {
       return option;
     }
 
-    return formatFrenchLabel(currentWordState.word, module.words);
+    return formatFrenchLabel(currentWord, moduleWords);
   };
 
-  if (completed || !currentWordState) {
+  const handleAdvance = () => {
+    if (!pendingProgress || !pendingSessionState) return;
+    setFeedback(null);
+    setPendingAdvance(false);
+    setSessionProgress(pendingProgress);
+    setSessionState(pendingSessionState);
+    onProgressChange(pendingProgress);
+    setPendingProgress(null);
+    setPendingSessionState(null);
+    setSelectedAnswer(null);
+    setCountdownProgress(0);
+    setRecallRevealed(false);
+  };
+
+  const handleEvaluation = (submittedAnswer: string | undefined, selfAssessedCorrect?: boolean) => {
+    if (!currentSessionItem || !sessionState) return;
+    const evaluation = evaluateAnswer(currentSessionItem, { value: submittedAnswer, self_assessed_correct: selfAssessedCorrect });
+    const nextResult = advanceSession(sessionState, sessionProgress.words, evaluation);
+    const nextProgress = { words: nextResult.progress };
+    setSelectedAnswer(submittedAnswer ?? (selfAssessedCorrect ? "__recall_correct__" : "__recall_incorrect__"));
+    playAnswerFeedbackSound(evaluation.is_correct);
+    setFeedback({ type: evaluation.is_correct ? "correct" : "incorrect", message: "" });
+    setPendingAdvance(true);
+    setPendingProgress(nextProgress);
+    setPendingSessionState(nextResult.session);
+    setCountdownProgress(1);
+  };
+
+  if (!currentSessionItem || !currentWord) {
     return (
       <div className="page-shell">
-        <header className="page-header">
-          <div>
-            <h1>{module.title}</h1>
-          </div>
-        </header>
-
+        <header className="page-header"><div><h1>{subModule.name}</h1></div></header>
         <section className="trainer-card trainer-card--complete">
           <div className="completion-actions">
-            {onGoToModuleTraining ? (
-              <button className="primary-button" onClick={onGoToModuleTraining} type="button">
-                Rejouer cette leçon
-              </button>
-            ) : null}
-            {nextModule && onGoToNextModule ? (
-              <button className="secondary-button" onClick={onGoToNextModule} type="button">
-                Passer à la leçon suivante
-              </button>
-            ) : null}
-            <button className="secondary-button" onClick={onBack} type="button">
-              Retour à l'accueil
-            </button>
+            {onGoToModuleTraining ? <button className="primary-button" onClick={onGoToModuleTraining} type="button">Rejouer ce sous-module</button> : null}
+            {nextSubModule && onGoToNextModule ? <button className="secondary-button" onClick={onGoToNextModule} type="button">Passer au sous-module suivant</button> : null}
+            <button className="secondary-button" onClick={onBack} type="button">Retour a l'accueil</button>
           </div>
         </section>
       </div>
     );
   }
 
-  const helperText =
-    currentWordState.attemptType === "exposure"
-      ? undefined
-      : "Choisis la bonne traduction parmi quatre cartes.";
-
-  const handleExposureNext = () => {
-    if (isExposureAdvancing) {
-      return;
-    }
-
-    const currentProgress = getWordProgress(sessionProgress, module.id, currentWordState.word);
-    const nextProgress = updateWordProgress(
-      sessionProgress,
-      module.id,
-      currentWordState.word,
-      markExposureComplete(currentProgress),
-    );
-
-    setIsExposureAdvancing(true);
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        setFeedback(null);
-        setPendingAdvance(false);
-        setPendingProgress(null);
-        setCountdownProgress(0);
-        setSelectedAnswer(null);
-        setSessionProgress(nextProgress);
-        setCurrentWordState(
-          getNextWord(module, nextProgress, currentWordState.word, { forceQuestion: true }),
-        );
-        setIsExposureAdvancing(false);
-        onProgressChange(nextProgress);
-      });
-    });
-  };
-
-  const handleSubmit = (answer: string) => {
-    setSelectedAnswer(answer);
-    const result = submitAnswer(
-      currentWordState.word,
-      answer,
-      getWordProgress(sessionProgress, module.id, currentWordState.word),
-    );
-    const nextProgress = updateWordProgress(
-      sessionProgress,
-      module.id,
-      currentWordState.word,
-      result.updatedProgress,
-    );
-
-    playAnswerFeedbackSound(result.isCorrect);
-    if (result.isCorrect) {
-      setFeedback({ type: "correct", message: "" });
-      setPendingAdvance(true);
-      setPendingProgress(nextProgress);
-      setCountdownProgress(1);
-      return;
-    }
-
-    setFeedback({
-      type: "incorrect",
-      message: "",
-    });
-    setPendingAdvance(true);
-    setPendingProgress(nextProgress);
-    setCountdownProgress(1);
-  };
-
-  const handleContinue = () => {
-    if (!pendingProgress) {
-      return;
-    }
-
-    const nextWord = getNextWord(module, pendingProgress, currentWordState.word);
-    setFeedback(null);
-    setPendingAdvance(false);
-    setSessionProgress(pendingProgress);
-    setCurrentWordState(nextWord);
-    onProgressChange(pendingProgress);
-    setPendingProgress(null);
-    setSelectedAnswer(null);
-    setCountdownProgress(0);
-  };
-
   return (
     <div className="page-shell">
       <header className="page-header">
         <div>
           <p className="page-kicker">En route</p>
-          <h1>{module.title}</h1>
+          <h1>{subModule.name}</h1>
         </div>
-        <button className="secondary-button" onClick={onBack} type="button">
-          Retour à l'accueil
-        </button>
+        <button className="secondary-button" onClick={onBack} type="button">Retour a l'accueil</button>
       </header>
 
-      <WordTrainer
-        countdownProgress={countdownProgress}
-        feedback={feedback}
-        getOptionLabel={getOptionLabel}
-        helperText={helperText}
-        isAnswered={pendingAdvance || isExposureAdvancing}
-        mode={currentWordState.attemptType}
-        onContinue={handleContinue}
-        onNextExposure={handleExposureNext}
-        onSubmit={handleSubmit}
-        options={questionOptions}
-        progressLabel={progressLabel}
-        selectedAnswer={selectedAnswer}
-        showAnsweredControls={feedback?.type !== "correct"}
-        translationLabel={translationLabel}
-        word={currentWordState.word}
-      />
+      {currentSessionItem.mode === "mcq" ? (
+        <WordTrainer
+          countdownProgress={countdownProgress}
+          feedback={feedback}
+          getOptionLabel={getOptionLabel}
+          helperText="Choisis la bonne traduction parmi quatre cartes."
+          isAnswered={pendingAdvance}
+          mode="question"
+          onContinue={handleAdvance}
+          onNextExposure={() => undefined}
+          onSubmit={(answer) => handleEvaluation(answer)}
+          options={currentSessionItem.options}
+          progressLabel={progressLabel}
+          selectedAnswer={selectedAnswer}
+          showAnsweredControls={feedback?.type !== "correct"}
+          translationLabel={translationLabel}
+          word={currentWord}
+        />
+      ) : (
+        <section className="trainer-card">
+          <div className="trainer-card__content">
+            <p className="eyebrow">{progressLabel}</p>
+            <h2 className="trainer-word">{currentWord.dz}</h2>
+            {!recallRevealed ? (
+              <button className="primary-button" onClick={() => setRecallRevealed(true)} type="button">Afficher la reponse</button>
+            ) : (
+              <>
+                <p className="trainer-translation">{translationLabel ?? currentWord.fr}</p>
+                <div className="choice-grid">
+                  <button className="choice-card" disabled={pendingAdvance} onClick={() => handleEvaluation(undefined, true)} type="button">Je l'avais</button>
+                  <button className="choice-card" disabled={pendingAdvance} onClick={() => handleEvaluation(undefined, false)} type="button">Je me suis trompe</button>
+                </div>
+              </>
+            )}
+            {pendingAdvance && feedback?.type !== "correct" ? (
+              <div className="countdown-block">
+                <div className="countdown-bar" aria-hidden="true"><div className="countdown-bar__fill" style={{ width: `${Math.max(0, Math.min(1, countdownProgress)) * 100}%` }} /></div>
+                <button className="primary-button trainer-next-button" onClick={handleAdvance} type="button">Passer tout de suite</button>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

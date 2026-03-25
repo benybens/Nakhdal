@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ModuleCard } from "../components/ModuleCard";
-import { getModuleMasteredCount, isModuleCompleted } from "../logic/trainingEngine";
-import { getModuleProgress } from "../store/progressStore";
-import { UserProgress, VocabularyLesson, VocabularyModule } from "../types";
+import { getSubModulesForModule, getWordIdsForSubModule } from "../domain/modules";
+import type { ProgressStoreState } from "../store/progressStore";
+import type { Module } from "../types/learning";
 
 type HomeProps = {
-  modules: VocabularyModule[];
-  progress: UserProgress;
+  modules: Module[];
+  progress: ProgressStoreState;
   canStartTraining: boolean;
-  onOpenLesson: (lessonId: string) => void;
+  onOpenLesson: (subModuleId: string) => void;
   onOpenTraining: () => void;
 };
 
@@ -41,26 +41,28 @@ export const Home = ({
       <section className="panel">
         <div className="section-heading">
           <h2>Par où on commence ?</h2>
-          <span className="section-note">Choisis un module, puis avance leçon par leçon.</span>
+          <span className="section-note">Choisis un module, puis avance sous-module par sous-module.</span>
         </div>
 
         <div className="lesson-list">
           {modules.map((moduleGroup) => {
             const isExpanded = expandedModules[moduleGroup.id] ?? false;
-            const completedLessons = moduleGroup.lessons.filter((lesson: VocabularyLesson) =>
-              isModuleCompleted(lesson, progress),
-            ).length;
-            const isCompleted = completedLessons === moduleGroup.lessons.length;
-            const exploredLessons = moduleGroup.lessons.filter((lesson: VocabularyLesson) => {
-              const lessonProgress = getModuleProgress(progress, lesson);
-              return Object.keys(lessonProgress.wordStats).length > 0;
+            const moduleSubModules = getSubModulesForModule(moduleGroup.id);
+            const completedSubModules = moduleSubModules.filter((subModule) => {
+              const wordIds = getWordIdsForSubModule(subModule.id);
+              return wordIds.length > 0 && wordIds.every((wordId) => (progress.words[wordId]?.mastery_level ?? 0) >= 3);
             }).length;
+            const exploredSubModules = moduleSubModules.filter((subModule) => {
+              const wordIds = getWordIdsForSubModule(subModule.id);
+              return wordIds.some((wordId) => Boolean(progress.words[wordId]));
+            }).length;
+            const isCompleted = moduleSubModules.length > 0 && completedSubModules === moduleSubModules.length;
 
             let moduleProgressLabel = "Pas encore exploré";
             if (isCompleted) {
-              moduleProgressLabel = "Toutes les leçons sont terminées";
-            } else if (exploredLessons > 0) {
-              moduleProgressLabel = `Tu as déjà ouvert ${exploredLessons} leçon${exploredLessons > 1 ? "s" : ""} sur ${moduleGroup.lessons.length}`;
+              moduleProgressLabel = "Tous les sous-modules sont terminés";
+            } else if (exploredSubModules > 0) {
+              moduleProgressLabel = `Tu as déjà ouvert ${exploredSubModules} sous-module${exploredSubModules > 1 ? "s" : ""} sur ${moduleSubModules.length}`;
             }
 
             return (
@@ -75,7 +77,7 @@ export const Home = ({
                   type="button"
                 >
                   <span>
-                    <span className="lesson-toggle__title">{moduleGroup.title}</span>
+                    <span className="lesson-toggle__title">{moduleGroup.name}</span>
                     <span className="lesson-toggle__meta">{moduleProgressLabel}</span>
                   </span>
                   <span className={`lesson-toggle__chevron ${isExpanded ? "lesson-toggle__chevron--open" : ""}`}>
@@ -85,22 +87,23 @@ export const Home = ({
 
                 {isExpanded ? (
                   <div className="lesson-submodules">
-                    {moduleGroup.lessons.map((lesson, index) => {
-                      const knownWords = getModuleMasteredCount(lesson, progress);
-                      const totalWords = lesson.words.length;
-                      const completionPercent = Math.round((knownWords / totalWords) * 100);
-                      const isCompleted = isModuleCompleted(lesson, progress);
+                    {moduleSubModules.map((subModule, index) => {
+                      const wordIds = getWordIdsForSubModule(subModule.id);
+                      const knownWords = wordIds.filter((wordId) => (progress.words[wordId]?.mastery_level ?? 0) >= 3).length;
+                      const totalWords = wordIds.length;
+                      const completionPercent = totalWords > 0 ? Math.round((knownWords / totalWords) * 100) : 0;
+                      const isCompleted = totalWords > 0 && knownWords === totalWords;
                       const progressLabel = isCompleted
                         ? "Terminé"
                         : `${knownWords} / ${totalWords} mots • ${completionPercent}%`;
 
                       return (
                         <ModuleCard
-                          key={lesson.id}
+                          key={subModule.id}
                           isCompleted={isCompleted}
-                          module={lesson}
-                          onOpen={() => onOpenLesson(lesson.id)}
-                          progressLabel={`Leçon ${index + 1} • ${progressLabel}`}
+                          module={subModule}
+                          onOpen={() => onOpenLesson(subModule.id)}
+                          progressLabel={`Sous-module ${index + 1} • ${progressLabel}`}
                         />
                       );
                     })}
@@ -118,7 +121,7 @@ export const Home = ({
           <span className="section-note">
             {canStartTraining
               ? "Encore un tour ?"
-              : "Encore quelques mots et tu débloques la révision."}
+              : "Continue tes sous-modules pour lancer l'entraînement global."}
           </span>
         </div>
         <button

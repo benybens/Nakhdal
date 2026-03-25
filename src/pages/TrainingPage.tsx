@@ -1,20 +1,22 @@
 import { TrainingSession } from "../components/TrainingSession";
-import { VocabularyWord } from "../types";
+import type { ProgressStoreState } from "../store/progressStore";
 
 type TrainingPageProps = {
-  words: VocabularyWord[];
+  progress: ProgressStoreState;
   onBack: () => void;
+  onProgressChange: (nextProgress: ProgressStoreState) => void;
   title?: string;
   kicker?: string;
 };
 
-export const TrainingPage = ({ words, onBack, title, kicker }: TrainingPageProps) => {
+export const TrainingPage = ({ progress, onBack, onProgressChange, title, kicker }: TrainingPageProps) => {
   return (
     <TrainingSession
       kicker={kicker}
       onExit={onBack}
+      onProgressChange={onProgressChange}
+      progress={progress}
       title={title}
-      words={words}
     />
   );
 };

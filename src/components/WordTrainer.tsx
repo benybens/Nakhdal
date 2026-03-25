@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { VocabularyWord } from "../types";
+import type { VocabularyWord } from "../types";
 
 type FeedbackState =
   | {
@@ -179,3 +179,4 @@ export const WordTrainer = ({
     </section>
   );
 };
+

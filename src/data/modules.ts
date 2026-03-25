@@ -1,18 +1,20 @@
-import lesson02PresentationVocab from "./json/lesson_02_presentation_vocab.json";
-import lesson03Pronouns from "./json/lesson_03_pronouns.json";
-import lesson03Vocab from "./json/lesson_03_vocab.json";
-import lesson04Demonstratives from "./json/lesson_04_demonstratives.json";
-import lesson04Vocab from "./json/lesson_04_vocab.json";
-import lesson05KeyExpressions from "./json/lesson_05_key_expressions.json";
-import lesson05VideoVocab from "./json/lesson_05_video_vocab.json";
-import lesson06Possessive from "./json/lesson_06_possessive.json";
-import lesson06Vocab from "./json/lesson_06_vocab.json";
-import lesson07NatureVocab from "./json/lesson_07_nature_vocab.json";
-import lesson08KeyExpressions from "./json/lesson_08_key_expressions.json";
-import pronunciationLetters from "./json/pronunciation_letters.json";
-import { VocabularyLesson, VocabularyModule, VocabularyWord } from "../types";
+import lesson02PresentationVocab from "./json/lesson_02_presentation_vocab\.json" with { type: "json" };
+import lesson03Pronouns from "./json/lesson_03_pronouns\.json" with { type: "json" };
+import lesson03Vocab from "./json/lesson_03_vocab\.json" with { type: "json" };
+import lesson04Demonstratives from "./json/lesson_04_demonstratives\.json" with { type: "json" };
+import lesson04Vocab from "./json/lesson_04_vocab\.json" with { type: "json" };
+import lesson05KeyExpressions from "./json/lesson_05_key_expressions\.json" with { type: "json" };
+import lesson05VideoVocab from "./json/lesson_05_video_vocab\.json" with { type: "json" };
+import lesson06Possessive from "./json/lesson_06_possessive\.json" with { type: "json" };
+import lesson06Vocab from "./json/lesson_06_vocab\.json" with { type: "json" };
+import lesson07NatureVocab from "./json/lesson_07_nature_vocab\.json" with { type: "json" };
+import lesson08KeyExpressions from "./json/lesson_08_key_expressions\.json" with { type: "json" };
+import pronunciationLetters from "./json/pronunciation_letters\.json" with { type: "json" };
+type LegacyWord = { dz: string; fr: string };
+type LegacyLesson = { id: string; title: string; words: LegacyWord[] };
+type LegacyModule = { id: string; title: string; lessons: LegacyLesson[] };
 
-const sourceLessons: VocabularyLesson[] = [
+const sourceLessons: LegacyLesson[] = [
   pronunciationLetters,
   lesson02PresentationVocab,
   lesson03Pronouns,
@@ -25,7 +27,7 @@ const sourceLessons: VocabularyLesson[] = [
   lesson06Vocab,
   lesson07NatureVocab,
   lesson08KeyExpressions,
-] as VocabularyLesson[];
+] as LegacyLesson[];
 
 const MIN_WORDS_PER_LESSON = 3;
 const MAX_WORDS_PER_LESSON = 15;
@@ -38,7 +40,7 @@ const normalizeWordKey = (value: string) =>
 
 const isSinglePromptTerm = (value: string) => /^[^\s]+$/.test(normalizeWordKey(value));
 
-const wordIndex = new Map<string, VocabularyWord>();
+const wordIndex = new Map<string, LegacyWord>();
 
 for (const lesson of sourceLessons) {
   for (const word of lesson.words) {
@@ -53,7 +55,7 @@ for (const lesson of sourceLessons) {
   }
 }
 
-const pickWord = (dz: string): VocabularyWord => {
+const pickWord = (dz: string): LegacyWord => {
   const word = wordIndex.get(normalizeWordKey(dz));
 
   if (!word) {
@@ -63,7 +65,7 @@ const pickWord = (dz: string): VocabularyWord => {
   return word;
 };
 
-const createIndexedLesson = (id: string, title: string, words: string[]): VocabularyLesson => ({
+const createIndexedLesson = (id: string, title: string, words: string[]): LegacyLesson => ({
   id,
   title,
   words: words.map(pickWord),
@@ -73,13 +75,13 @@ const createManualLesson = (
   id: string,
   title: string,
   words: Array<[dz: string, fr: string]>,
-): VocabularyLesson => ({
+): LegacyLesson => ({
   id,
   title,
   words: words.map(([dz, fr]) => ({ dz, fr })),
 });
 
-const splitWordsIntoBalancedLessons = (words: VocabularyWord[]) => {
+const splitWordsIntoBalancedLessons = (words: LegacyWord[]) => {
   if (words.length <= MAX_WORDS_PER_LESSON) {
     return [words];
   }
@@ -92,7 +94,7 @@ const splitWordsIntoBalancedLessons = (words: VocabularyWord[]) => {
     throw new Error(`Unable to split ${words.length} words into lessons of at least ${MIN_WORDS_PER_LESSON}.`);
   }
 
-  const groups: VocabularyWord[][] = [];
+  const groups: LegacyWord[][] = [];
   let startIndex = 0;
 
   for (let index = 0; index < groupCount; index += 1) {
@@ -104,7 +106,7 @@ const splitWordsIntoBalancedLessons = (words: VocabularyWord[]) => {
   return groups;
 };
 
-const splitLesson = (lesson: VocabularyLesson): VocabularyLesson[] => {
+const splitLesson = (lesson: LegacyLesson): LegacyLesson[] => {
   if (lesson.words.length <= MAX_WORDS_PER_LESSON) {
     return [lesson];
   }
@@ -116,13 +118,13 @@ const splitLesson = (lesson: VocabularyLesson): VocabularyLesson[] => {
   }));
 };
 
-const createModule = (id: string, title: string, lessonList: VocabularyLesson[]): VocabularyModule => ({
+const createModule = (id: string, title: string, lessonList: LegacyLesson[]): LegacyModule => ({
   id,
   title,
   lessons: lessonList.flatMap(splitLesson),
 });
 
-const learningModules: VocabularyModule[] = [
+const learningModules: LegacyModule[] = [
   createModule("foundations_v2", "01. Poser les bases de ta Darija", [
     createIndexedLesson("foundations_pronouns_v2", "Moi, toi, nous", [
       "Ana",
@@ -1218,9 +1220,12 @@ const moduleOrder = [
 
 const moduleOrderIndex = new Map<string, number>(moduleOrder.map((id, index) => [id, index]));
 
-export const modules: VocabularyModule[] = [...learningModules].sort((left, right) => {
+export const modules: LegacyModule[] = [...learningModules].sort((left, right) => {
   const leftIndex = moduleOrderIndex.get(left.id) ?? Number.MAX_SAFE_INTEGER;
   const rightIndex = moduleOrderIndex.get(right.id) ?? Number.MAX_SAFE_INTEGER;
   return leftIndex - rightIndex;
 });
-export const lessons: VocabularyLesson[] = modules.flatMap((module) => module.lessons);
+export const lessons: LegacyLesson[] = modules.flatMap((module) => module.lessons);
+
+
+
